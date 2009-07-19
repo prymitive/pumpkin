@@ -216,3 +216,24 @@ class Directory(object):
         for (attr, values) in attrs.items():
             modlist.append((attr, values))
         self._ldapconn.add_s(ldap_dn, modlist)
+
+    def _get_oc_inst(self, oc):
+        """Get object class instance
+        """
+        for oids in self._schema.listall(schema.ObjectClass):
+            obj = self._schema.get_obj(schema.ObjectClass, oids)
+            if oc in obj.names:
+                return obj
+        else:
+             raise Exception("Object class '%s' not found in schema" % oc)
+
+    def get_required_attrs(self, oc):
+        """Get list of all required attributes for given object class
+        """
+        return [attr for attr in self._get_oc_inst(oc).must]
+
+    def get_available_attrs(self, oc):
+        """Get list of all additional attributes that are available for given
+        object class
+        """
+        return [attr for attr in self._get_oc_inst(oc).may]

@@ -81,7 +81,23 @@ class _model(type):
         """Intercept getattr() calls and return Field attribute name instead
         of property
         """
+        # start with currents class _fields
         fields = super(_model, cls).__getattribute__('_fields')
+
+        # if we are getattr'ing _fields then we return it right away
+        if name == '_fields':
+            return fields
+
+        # we get _fields from every class in __bases__ and append it to fields
+        for base in super(_model, cls).__getattribute__('__bases__'):
+            try:
+                base_fields = super(_model, base).__getattribute__('_fields')
+                for (field, instance) in base_fields.items():
+                    if field not in fields.keys():
+                        fields[field] = instance
+            except:
+                pass
+
         if name in fields.keys():
             for (field, instance) in fields.items():
                 if field == name:
