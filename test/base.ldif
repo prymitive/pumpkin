@@ -1,0 +1,47 @@
+dn: dc=company,dc=com
+objectClass: top
+objectClass: dcObject
+objectClass: organization
+o: company
+dc: company
+
+dn: ou=groups,dc=company,dc=com
+objectClass: organizationalUnit
+objectClass: top
+ou: groups
+
+dn: cn=groupOfnames,ou=groups,dc=company,dc=com
+cn: groupOfnames
+member: cn=Max Blank,ou=users,dc=company,dc=com
+objectClass: groupOfNames
+objectClass: top
+
+dn: cn=testgroup,ou=groups,dc=company,dc=com
+objectClass: posixGroup
+objectClass: top
+cn: testgroup
+gidNumber: 1000
+
+dn: ou=users,dc=company,dc=com
+objectClass: organizationalUnit
+objectClass: top
+ou: users
+
+dn: cn=Max Blank,ou=users,dc=company,dc=com
+givenName: Max
+sn: Blank
+gidNumber: 1000
+homeDirectory: /home/users/max.blank
+loginShell: /bin/sh
+userPassword: dupa
+uidNumber: 1000
+mobile: 12345
+mobile: 67890
+cn: Max Blank
+mail: max@blank.com
+mail: max.blank@blank.com
+uid: max.blank
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: top
+description: Opis

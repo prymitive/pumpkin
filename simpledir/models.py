@@ -1,0 +1,77 @@
+# -*- coding: utf-8 -*-
+'''
+Created on 2009-06-07
+@author: Łukasz Mierzwa
+@contact: <l.mierzwa@gmail.com>
+@license: GPLv3: http://www.gnu.org/licenses/gpl-3.0.txt
+'''
+
+
+from base import Model
+
+from fields import IntegerField
+from fields import IntegerListField
+from fields import StringField
+from fields import StringListField
+
+
+class Entry(Model):
+    """Simple entry model
+    """
+    _object_class_ = []
+    _structural_class_ = 'top'
+    object_class = StringListField('objectClass', readonly=True)
+
+
+class PosixUser(Entry):
+    """posixAccount model
+    """
+    _object_class_ = 'posixAccount'
+    _rdn_ = 'login'
+
+    login = StringField('uid')
+    uid = IntegerField('uidNumber')
+    gid = IntegerField('gidNumber')
+    fullname = StringField('cn')
+    shell = StringField('loginShell')
+    home = StringField('homeDirectory')
+    #TODO password = PasswordField('userPassword')
+
+
+class PosixGroup(Entry):
+    """posixGroup model
+    """
+    _object_class_ = 'posixGroup'
+    _structural_class_ = _object_class_
+    _rdn_ = 'name'
+
+    name = StringField('cn')
+    gid = IntegerField('gidNumber')
+    members = IntegerListField('memberUid')
+
+    def add_member(self, uid):
+        """Add given user uid to member list
+        """
+        if self.members:
+            if not self.ismember(uid):
+                self.members += [uid]
+        else:
+             self.members = [uid]
+
+    def remove_member(self, uid):
+        """Removes given user uid from members list
+        """
+        if self.ismember(uid):
+            newval = self.members
+            newval.remove(uid)
+            self.members = newval
+        else:
+            raise Exception('Uid %s not found in group %s' % (uid, self.dn))
+
+    def ismember(self, uid):
+        """Return True if given uid is member of this group.
+        """
+        if self.members and uid in self.members:
+            return True
+        else:
+            return False

@@ -1,0 +1,125 @@
+Shor tutorial
+=============
+
+Connecting to LDAP database
+---------------------------
+
+Before we connect to LDAP database, we need to create
+:class:`~simpledir.resource.LDAPResource` instance and setup connection 
+parameters. After this we can create :class:`~simpledir.directory.Directory`
+instance using our :class:`~simpledir.resource.LDAPResource` as argument::
+
+  from simpledir.resource import LDAPResource
+  from simpledir.directory import Directory
+
+  LDAP_RES = LDAPResource()
+  LDAP_RES.server = 'ldap://localhost'
+  LDAP_RES.login = 'cn=Manager,dc=company,dc=com'
+  LDAP_RES.password = 'pass'
+  LDAP_RES.TLS = False
+  LDAP_RES.basedn = 'dc=company,dc=com'
+  LDAP_RES.method = resource.AUTH_SIMPLE
+
+  LDAP_CONN = Directory(LDAP_RES)
+
+In example above we will connect to LDAP server at localhost, the connection
+will authenticate using simple bind operation and we won't be using TLS for
+encryption. *dc=company,dc=com* will be used as base location for all 
+operations, including searches, so if we would want to list entries in
+*ou=users,dc=company,dc=com* our location for search will be 
+*ou=users*, *dc=company,dc=com* will be appended to it so we don't have to enter
+it over and over.
+
+Reading and writing to LDAP using models
+----------------------------------------
+
+To get a single entry (posixGroup in this example) from LDAP database we will
+create new instance of :class:`~simpledir.models.PosixGroup` model, mapped to
+existing entry::
+
+  >>> from models import PosixGroup
+  >>> pg = PosixGroup(LDAP_CONN, 'cn=testGroup,ou=groups,dc=company,dc=com')
+
+Now we can get and set it's attributes values::
+
+  >>> print(pg.gid_number)
+  101
+  >>> pg.gid_number = 102
+  >>> print(pg.gid_number)
+  102
+
+If we set new value to an attribute that is part of entry :term:`rdn` it will
+also rename our entry. Note that *cn* field is using 
+:class:`~simpledir.fields.StringField` type, so it is storing unicode string, we
+must remeber that when we are setting new value::
+
+  >>> pg.cn = u'NewCN'
+  >>> print(pg.cn)
+  NewCN
+  >>> print(pg.dn)
+  cn=NewCN,ou=groups,dc=company,dc=com
+
+Listing LDAP tree using models
+-------------------------------
+
+To list all entries in a given location we need to call
+:func:`~simpledir.directory.Directory.search` method on our
+:class:`~simpledir.directory.Directory` instance, remember that all locations
+are relative to basedn that we set on our 
+:class:`~~simpledir.resource.LDAPResource` instance::
+
+  >>> glist = LDAP_CONN.search('ou=groups', model=PosixGroup, recursive=False)
+
+As we can see we will get the list of all entries that are matching
+:class:`~simpledir.models.PosixGroup` model that are located directly
+above *ou=groups* location. Now lets print what we found::
+
+  >>> for pg in glist:
+  ...     print(pg.dn)
+  cn=group1,ou=groups,dc=company,dc=com
+  cn=group2,ou=groups,dc=company,dc=com
+  cn=group3,ou=groups,dc=company,dc=com
+
+Creating new entry
+-----------------------------
+
+Lets create new posixGroup entry, before we start lets have a look how our model
+for posixGroup is defined::
+
+  class PosixGroup(Entry):
+    _object_class_ = 'posixGroup'
+    _rdn_ = 'cn'
+    cn = StringField('cn')
+    gid_number = IntegerField('gidNumber')
+    member_uid = IntegerListField('memberUid')
+
+As we can see there are three fields and one of them is used as :term:`rdn`
+attribute. :class:`~simpledir.models.PosixGroup` model defines 'cn' as 
+:term:`rdn` so example below will create entry with :term:`dn`
+*cn=newPosixGroup,ou=groups,dc=company,dc=com*::
+
+  >>> pg = PosixGroup(LDAP_CONN)
+  >>> pg.cn = 'Test group'
+  >>> pg.gid_number = 1234
+  >>> pg.member_uid = [1,2,3]
+  >>> pg.location = 'ou=groups,dc=company,dc=com'
+  >>> pg.save()
+  >>> print(pg.dn)
+  cn=Test group,ou=groups,dc=company,dc=com
+
+Glossary
+--------
+
+.. glossary::
+
+   dn
+      DN stands for *Distinguished Name*, it is a series of :term:`rdn`'s found
+      by walking back to servers base dn, think of it as entry location in tree.
+      Example: *uid=john,ou=users,dc=company,dc=com*
+
+   rdn
+      RDN stands for *Relative Distinguished Name*, it is local part of
+      distinguished name, for example rdn of entry with :term:`dn`
+      *uid=john,dc=company,dc=com* is *uid=john*. Each new entry will be created
+      with :term:`dn` composed from models fileds marked as rdn and entrys
+      location.
