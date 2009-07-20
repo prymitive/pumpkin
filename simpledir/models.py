@@ -12,18 +12,9 @@ from base import Model
 from fields import IntegerField
 from fields import IntegerListField
 from fields import StringField
-from fields import StringListField
 
 
-class Entry(Model):
-    """Simple entry model
-    """
-    _object_class_ = []
-    _structural_class_ = 'top'
-    object_class = StringListField('objectClass', readonly=True)
-
-
-class PosixUser(Entry):
+class PosixUser(Model):
     """posixAccount model
     """
     _object_class_ = 'posixAccount'
@@ -38,7 +29,7 @@ class PosixUser(Entry):
     #TODO password = PasswordField('userPassword')
 
 
-class PosixGroup(Entry):
+class PosixGroup(Model):
     """posixGroup model
     """
     _object_class_ = 'posixGroup'

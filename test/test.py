@@ -10,7 +10,8 @@ from simpledir.fields import StringField
 from simpledir.fields import StringListField
 from simpledir.fields import IntegerField
 from simpledir.fields import IntegerListField
-from simpledir.models import Entry, PosixGroup
+from simpledir.base import Model
+from simpledir.models import PosixGroup
 
 
 import unittest
@@ -28,7 +29,7 @@ LDAP_RES.method = resource.AUTH_SIMPLE
 LDAP_CONN = directory.Directory(LDAP_RES)
 
 
-class QA(Entry):
+class QA(Model):
     """Testing model
     """
     _object_class_ = 'posixAccount'

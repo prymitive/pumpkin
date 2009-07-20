@@ -12,6 +12,7 @@ from functools import partial
 import ldap.dn
 
 from fields import Field
+from fields import StringListField
 
 
 class _model(type):
@@ -110,7 +111,8 @@ class Model(object):
     """This class represents LDAP object
     """
     __metaclass__ = _model
-    _object_class_ = []
+    _structural_class_ = 'top'
+    object_class = StringListField('objectClass', readonly=True)
 
     @classmethod
     def get_private_classes(cls):
@@ -141,6 +143,22 @@ class Model(object):
         """Return LDAP structural object class used when creating new object
         """
         return cls._structural_class_
+
+    def _object_class_fget(self):
+        """Custom fget for getting objectClass, for new object it will return
+        _object_class_ + _structural_class_, for storred objects it will return
+        actual objectClass value from LDAP
+        """
+        if self._get_attr('objectClass'):
+            # we got value in local storage, return it
+            return self._get_fields()['object_class'].fget(self)
+        else:
+            # we got new, empty object, return default objectClass
+            ocs = self.get_private_classes()
+            if self.get_structural_class() not in ocs:
+                ocs.append(self.get_structural_class())
+            return ocs
+
 
     def __init__(self, directory, dn=None, attrs={}):
         """Model constructor. You need to pass directory instance reference,
@@ -227,20 +245,17 @@ class Model(object):
         self._store_attr(attr, None)
 
     def get_attributes(self):
-        """Returns dict with all attributes that are set
+        """Returns dict with all attributes that are set, values will be in LDAP
+        format (list of str)
         """
-        record = {}
-        if self.isnew():
-            classes = [oc.encode('utf-8') for oc in self.get_private_classes()]
-            if self.get_structural_class() not in classes:
-                classes.append(self.get_structural_class())
-            record['objectClass'] = classes
-        else:
-            record['objectClass'] = [
-                oc.encode('utf-8') for oc in self.object_class]
-
+        # we need to make sure that objectClass is set
+        record = {
+            'objectClass': self._get_fields()['object_class'].encode2str(
+                self.object_class),
+        }
         for (attr, value) in self._storage.items():
-            record[attr] = value
+            if attr not in record.keys():
+                record[attr] = value
         return record
 
     def update(self, missing_only=False, force=False):
@@ -362,15 +377,8 @@ class Model(object):
     def get_missing_attrs(self):
         """Check if all attributes required by schema are set
         """
-        if self.object_class:
-            ocs = self.object_class
-        else:
-            ocs = self.get_private_classes()
-            if self.get_structural_class() not in ocs:
-                ocs.append(self.get_structural_class())
-
         ret = []
-        for oc in ocs:
+        for oc in self.object_class:
             # we get each attr in each object class and check if it is set
             for attr in self._directory.get_required_attrs(oc):
                 found = False
