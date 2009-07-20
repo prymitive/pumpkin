@@ -388,6 +388,11 @@ class Model(object):
         to LDAP, update self._rdn and mark it non-empty, if instance is
         non-empty it will write all attributes to LDAP
         """
+        missing = self.get_missing_attrs()
+        if missing != []:
+            raise Exception(
+                "Can't save when required attributes are missing: %s" % missing)
+        
         record = self.get_attributes()
         if self.isnew():
             if self.location is None:

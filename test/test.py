@@ -33,6 +33,7 @@ class QA(Entry):
     """
     _object_class_ = 'posixAccount'
     _rdn_ = 'cn'
+    uid = StringField('uid')
     string = StringField('cn')
     string_list = StringListField('mail')
 #    singleval_check = StringField('mail') #TODO
@@ -76,7 +77,7 @@ class Test(unittest.TestCase):
         self.assertEqual(qa._get_fields().keys(), [
             'integer_list', 'custom_func', 'string_rw', 'string_list',
             'integer_ro', 'integer', 'string_default', 'object_class',
-            'string']
+            'string', 'uid']
         )
 
     def test_string(self):
