@@ -359,6 +359,30 @@ class Model(object):
         self._rdn, self._location = self._directory.move(
             self.dn, self.rdn, new_location)
 
+    def get_missing_attrs(self):
+        """Check if all attributes required by schema are set
+        """
+        if self.object_class:
+            ocs = self.object_class
+        else:
+            ocs = self.get_private_classes()
+            if self.get_structural_class() not in ocs:
+                ocs.append(self.get_structural_class())
+
+        ret = []
+        for oc in ocs:
+            # we get each attr in each object class and check if it is set
+            for attr in self._directory.get_required_attrs(oc):
+                found = False
+                for (name, instance) in self._get_fields().items():
+                    if instance.attr == attr:
+                        if getattr(self, name):
+                            found = True
+                if not found:
+                    if attr not in ret:
+                        ret.append(attr)
+        return ret
+
     def save(self):
         """Save object into LDAP, if instance in new it will add object
         to LDAP, update self._rdn and mark it non-empty, if instance is
