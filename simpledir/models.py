@@ -17,7 +17,7 @@ from fields import StringField
 class PosixUser(Model):
     """posixAccount model
     """
-    _object_class_ = 'posixAccount'
+    _object_class_ = ['posixAccount','inetOrgPerson']
     _rdn_ = 'login'
 
     login = StringField('uid')
@@ -35,7 +35,6 @@ class PosixGroup(Model):
     """posixGroup model
     """
     _object_class_ = 'posixGroup'
-    _structural_class_ = _object_class_
     _rdn_ = 'name'
 
     name = StringField('cn')

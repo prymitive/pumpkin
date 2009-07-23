@@ -111,7 +111,6 @@ class Model(object):
     """This class represents LDAP object
     """
     __metaclass__ = _model
-    _structural_class_ = 'top'
     object_class = StringListField('objectClass', readonly=True)
 
     @classmethod
@@ -138,15 +137,9 @@ class Model(object):
                     ret.append(pclass)
         return ret
 
-    @classmethod
-    def get_structural_class(cls):
-        """Return LDAP structural object class used when creating new object
-        """
-        return cls._structural_class_
-
     def _object_class_fget(self):
         """Custom fget for getting objectClass, for new object it will return
-        _object_class_ + _structural_class_, for storred objects it will return
+        _object_class_, for storred objects it will return
         actual objectClass value from LDAP
         """
         if self._get_attr('objectClass'):
@@ -154,10 +147,7 @@ class Model(object):
             return self._get_fields()['object_class'].fget(self)
         else:
             # we got new, empty object, return default objectClass
-            ocs = self.get_private_classes()
-            if self.get_structural_class() not in ocs:
-                ocs.append(self.get_structural_class())
-            return ocs
+            return self.get_private_classes()
 
 
     def __init__(self, directory, dn=None, attrs={}):
