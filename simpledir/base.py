@@ -364,21 +364,17 @@ class Model(object):
         self._rdn, self._location = self._directory.move(
             self.dn, self.rdn, new_location)
 
-    def get_missing_attrs(self):
+    def get_missing_fields(self):
         """Check if all attributes required by schema are set
         """
         ret = []
         for oc in self.object_class:
             # we get each attr in each object class and check if it is set
             for attr in self._directory.get_required_attrs(oc):
-                found = False
                 for (name, instance) in self._get_fields().items():
                     if instance.attr == attr:
-                        if getattr(self, name):
-                            found = True
-                if not found:
-                    if attr not in ret:
-                        ret.append(attr)
+                        if getattr(self, name) is None:
+                            ret.append(name)
         return ret
 
     def save(self):
@@ -386,10 +382,10 @@ class Model(object):
         to LDAP, update self._rdn and mark it non-empty, if instance is
         non-empty it will write all attributes to LDAP
         """
-        missing = self.get_missing_attrs()
+        missing = self.get_missing_fields()
         if missing != []:
             raise Exception(
-                "Can't save when required attributes are missing: %s" % missing)
+                "Can't save when required fields are missing: %s" % missing)
         
         record = self.get_attributes()
         if self.isnew():

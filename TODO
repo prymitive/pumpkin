@@ -19,3 +19,5 @@
 # b) StringField + metoda password() na modelu która działa tylko jak jest
 #    field typu PasswordField w modelu i woła directory.mod_password_s()
 # c) coś innego?
+
+# utf-8 źle się zapisuje

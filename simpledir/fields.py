@@ -120,7 +120,7 @@ class StringListField(Field):
     def decode2local(self, values):
         """Returns list of unicode values
         """
-        return [item.decode('utf-8') for item in values]
+        return [unicode(item, 'utf-8') for item in values]
 
     def encode2str(self, values):
         """Returns list of str value
