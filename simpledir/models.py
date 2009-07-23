@@ -24,6 +24,8 @@ class PosixUser(Model):
     uid = IntegerField('uidNumber')
     gid = IntegerField('gidNumber')
     fullname = StringField('cn')
+    firstname = StringField('givenName')
+    surname = StringField('sn')
     shell = StringField('loginShell')
     home = StringField('homeDirectory')
     #TODO password = PasswordField('userPassword')
