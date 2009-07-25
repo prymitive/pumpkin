@@ -15,9 +15,7 @@
 # fieldy są ustawione ALBO can_save() sprawdza schemat
 
 # PasswordField - jak?
-# a) zwykły StringField i tyle
 # b) StringField + metoda password() na modelu która działa tylko jak jest
-#    field typu PasswordField w modelu i woła directory.mod_password_s()
-# c) coś innego?
-
-# utf-8 źle się zapisuje
+#    field typu PasswordField w modelu i woła directory.mod_password_s(),
+#    do tego kwargsy enc=(plain,md5,sha1) itd., encode2str zwróci str zakodowanego
+#    przy użyciu odpowiedniej metody, sprawdzić czy nasze md5 == ldap md5
