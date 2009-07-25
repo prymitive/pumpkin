@@ -14,6 +14,7 @@ from fields import IntegerField
 from fields import IntegerListField
 from fields import StringField
 from fields import StringListField
+from fields import DNListField
 
 
 class PosixUser(Model):
@@ -72,3 +73,14 @@ class PosixGroup(Model):
             return True
         else:
             return False
+
+
+class GroupOfNames(Model):
+    """groupOfNames model
+    """
+    _object_class_ = 'groupOfNames'
+    _rdn_ = 'cn'
+
+    name = StringField('cn')
+    member = DNListField('member', models=[PosixUser, PosixGroup])
+    #FIXME: fix models

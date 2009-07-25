@@ -89,13 +89,13 @@ class Field(object):
         if value is None:
             return None
         else:
-            return self.decode2local(value)
+            return self.decode2local(value, instance=instance)
 
     def fset(self, instance, value):
         """Write attribute value using model instance
         """
         value = self.validate(value)
-        instance._set_attr(self.attr, self.encode2str(value))
+        instance._set_attr(self.attr, self.encode2str(value, instance=instance))
 
     def fdel(self, instance):
         """Delete attribute using model instance
@@ -117,12 +117,12 @@ class StringListField(Field):
         else:
             raise ValueError, "Not a list of unicode values"
 
-    def decode2local(self, values):
+    def decode2local(self, values, instance=None):
         """Returns list of unicode values
         """
         return [unicode(item, 'utf-8') for item in values]
 
-    def encode2str(self, values):
+    def encode2str(self, values, instance=None):
         """Returns list of str value
         """
         return [item.encode('utf-8') for item in values]
@@ -139,12 +139,12 @@ class StringField(StringListField):
         else:
             raise ValueError, "Not a unicode value: %s" % values
 
-    def encode2str(self, values):
+    def encode2str(self, values, instance=None):
         """Returns str value
         """
         return StringListField.encode2str(self, [values])
     
-    def decode2local(self, values):
+    def decode2local(self, values, instance=None):
         """Return unicode value
         """
         check_singleval(self.attr, values)
@@ -166,12 +166,12 @@ class IntegerListField(Field):
         else:
             raise ValueError, "Not a list of int values: %s" % values
     
-    def decode2local(self, values):
+    def decode2local(self, values, instance=None):
         """Returns list of int
         """
         return [int(item) for item in values]
 
-    def encode2str(self, values):
+    def encode2str(self, values, instance=None):
         """Returns list of str values
         """
         return [str(item) for item in values]
@@ -189,13 +189,63 @@ class IntegerField(IntegerListField):
             raise ValueError, "Not a int value: %s" % values
         
     
-    def encode2str(self, values):
+    def encode2str(self, values, instance=None):
         """Returns str value
         """
         return IntegerListField.encode2str(self, [values])
     
-    def decode2local(self, values):
+    def decode2local(self, values, instance=None):
         """Returns int value
         """
         check_singleval(self.attr, values)
         return get_singleval(IntegerListField.decode2local(self, values))
+
+
+class DNListField(Field):
+    """List of distinguished names, contains list of object dn's, returns list
+    of object instances using kwargs model
+    @param models: list of models used to create instance of object with stored
+    dn, model instance will be created from first matching model
+    """
+    def __init__(self, name, **kwargs):
+        """Constructor, adds model kwarg to Field __init__ method
+        """
+        Field.__init__(self, name, **kwargs)
+        self.models = kwargs.get('models')
+        if self.models is None:
+            raise Exception('Models not set for DNField')
+
+    def decode2local(self, values, instance=None):
+        """Returns model instance
+        """
+        members = []
+        for dn in values:
+            for model in self.models:
+                try:
+                    item = model(instance._directory, dn)
+                    members.append(item)
+                    break
+                except:
+                    pass
+        return members
+
+    def encode2str(self, values, instance=None):
+        """Returns list of str
+        """
+        return [item.dn for item in values]
+
+
+class DNField(DNListField):
+    """Same as DNListField but stores single dn
+    """
+    def decode2local(self, values, instance=None):
+        """Returns model instance
+        """
+        return DNListField.decode2local(self, [values])
+
+    def encode2str(self, values, instance=None):
+        """Returns list of str
+        """
+        check_singleval(self.attr, values)
+        return DNListField.encode2str(self, [values])
+    
