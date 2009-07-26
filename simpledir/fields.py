@@ -203,7 +203,8 @@ class IntegerField(IntegerListField):
 
 class DNListField(Field):
     """List of distinguished names, contains list of object dn's, returns list
-    of object instances using kwargs model
+    of object instances using kwargs models or just list of dn's if no models
+    are given
     @param models: list of models used to create instance of object with stored
     dn, model instance will be created from first matching model
     """
@@ -211,28 +212,32 @@ class DNListField(Field):
         """Constructor, adds model kwarg to Field __init__ method
         """
         Field.__init__(self, name, **kwargs)
-        self.models = kwargs.get('models')
-        if self.models is None:
-            raise Exception('Models not set for DNField')
+        self.models = kwargs.get('models', None)
 
     def decode2local(self, values, instance=None):
         """Returns model instance
         """
-        members = []
-        for dn in values:
-            for model in self.models:
-                try:
-                    item = model(instance._directory, dn)
-                    members.append(item)
-                    break
-                except:
-                    pass
-        return members
+        if self.models:
+            members = []
+            for dn in values:
+                for model in self.models:
+                    try:
+                        item = model(instance._directory, dn)
+                        members.append(item)
+                        break
+                    except:
+                        pass
+            return members
+        else:
+            return values
 
     def encode2str(self, values, instance=None):
         """Returns list of str
         """
-        return [item.dn for item in values]
+        if self.models:
+            return [item.dn for item in values]
+        else:
+            return values
 
 
 class DNField(DNListField):
