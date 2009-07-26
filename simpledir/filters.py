@@ -7,28 +7,58 @@ Created on 2009-07-12
 '''
 
 
+from functools import wraps
+
+
+def unicode2str(func):
+    """Convert all unicode args to str
+    """
+    @wraps(func)
+    def newfunc( * args, ** kwargs):
+        nargs = []
+        for arg in args:
+            if isinstance(arg, unicode):
+                nargs.append(arg.encode('utf-8'))
+            else:
+                nargs.append(arg)
+
+        nkwargs = {}
+        for (kwarg, value) in kwargs.items():
+            if isinstance(value, unicode):
+                nkwargs[kwarg] = value.encode('utf-8')
+            else:
+                nkwargs[kwarg] = value
+        return func( *nargs, **nkwargs)
+    return newfunc
+
+
+@unicode2str
 def present(attr):
     """Will match only objects with *attr* atribute set
     """
     return '(%s=*)' % attr
 
+@unicode2str
 def eq(attr, value):
     """Will match only objects with *attr* atribute value set to *value*
     """
     return '(%s=%s)' % (attr, value)
 
+@unicode2str
 def startswith(attr, value):
     """Will match only objects with *attr* attribute set to string that starts
     with *value* substring
     """
     return '(%s=*%s)' % (attr, value)
 
+@unicode2str
 def endswith(attr, value):
     """Will match only objects with *attr* attribute set to string that ends
     with *value* substring
     """
     return '(%s=%s*)' % (attr, value)
 
+@unicode2str
 def contains(attr, value):
     """Will match only objects with *attr* attribute set to string that contains
     with *value* substring
@@ -36,6 +66,7 @@ def contains(attr, value):
     return '(%s=*%s*)' % (attr, value)
 
 
+@unicode2str
 def _make_op(prefix, parts):
     """Operator maker, used to create operators
     """

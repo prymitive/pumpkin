@@ -54,7 +54,7 @@ class Field(object):
         self.default = kwargs.get('default', None)
         self.lazy = kwargs.get('lazy', False)
 
-    def decode2local(self, values):
+    def decode2local(self, values, instance=None):
         """Returns field value decoded to local field type, if field represents
            value of integer type attribute than the value that we got from LDAP
            will be converted to int.
@@ -62,7 +62,7 @@ class Field(object):
         """
         return values
     
-    def encode2str(self, values):
+    def encode2str(self, values, instance=None):
         """Returns field value encoded to type that is parsable by python-ldap
            (list of str values). If any field is storing attribute value
            in format other then list of str values, than we need to define
