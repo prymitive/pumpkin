@@ -171,8 +171,9 @@ class Model(object):
             self._store_attr(attr, value)
         
         self._location = None
-
         self._directory = directory
+
+        self._validate_model_fields()
 
         if dn == None:
             self._empty = True
@@ -181,9 +182,27 @@ class Model(object):
             self._rdn = ldap.dn.dn2str([ldap.dn.str2dn(dn)[0]]) 
             self._location = ldap.dn.dn2str(ldap.dn.str2dn(dn)[1:])
             self.update(missing_only=True)
-            self._validate_model()
+            self._validate_object_class()
 
-    def _validate_model(self):
+    def _validate_model_fields(self):
+        """Checks if all model fields are present in schema
+        """
+        # get list of all attributes that can be store using all object classes
+        all_attrs = []
+        for oc in self.get_private_classes():
+            for attr in self._directory.get_available_attrs(oc, required=True):
+                all_attrs.append(attr)
+
+        for (field, instance) in self._get_fields().items():
+             if instance.attr not in all_attrs:
+                 raise Exception(
+"""Can't store '%s' field with LDAP attribute '%s' using current schema and \
+object classes: %s, all available attrs: %s""" % (
+                    field, instance.attr, self.get_private_classes(), all_attrs
+                    )
+                )
+
+    def _validate_object_class(self):
         """Checks if passed object dn matches our model. To do so we check if
         all object classes defined in model are present in object.
         """

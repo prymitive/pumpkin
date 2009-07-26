@@ -32,7 +32,7 @@ LDAP_CONN = directory.Directory(LDAP_RES)
 class QA(Model):
     """Testing model
     """
-    _object_class_ = 'posixAccount'
+    _object_class_ = ['posixAccount', 'inetOrgPerson']
     _rdn_ = 'cn'
     uid = StringField('uid')
     string = StringField('cn')
@@ -71,7 +71,8 @@ class Test(unittest.TestCase):
 
     def test_private_class(self):
         print('Model private class: %s' % qa.get_private_classes())
-        self.assertEqual(qa.get_private_classes(), ['posixAccount'])
+        self.assertEqual(
+            qa.get_private_classes(), ['posixAccount', 'inetOrgPerson'])
 
     def test_fields(self):
         print('Model fields: %s' %  qa._get_fields().keys())

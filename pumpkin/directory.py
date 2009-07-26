@@ -230,10 +230,27 @@ class Directory(object):
     def get_required_attrs(self, oc):
         """Get list of all required attributes for given object class
         """
-        return [attr for attr in self._get_oc_inst(oc).must]
+        oc_inst = self._get_oc_inst(oc)
+        attrs = [attr for attr in oc_inst.must]
+        for sup_oc in oc_inst.sup:
+            for attr in self.get_required_attrs(sup_oc):
+                if attr not in attrs:
+                    attrs.append(attr)
+        return attrs
 
-    def get_available_attrs(self, oc):
+    def get_available_attrs(self, oc, required=False):
         """Get list of all additional attributes that are available for given
         object class
+        @param required: return also all required attributes
         """
-        return [attr for attr in self._get_oc_inst(oc).may]
+        oc_inst = self._get_oc_inst(oc)
+        attrs = [attr for attr in oc_inst.may]
+        for sup_oc in oc_inst.sup:
+            for attr in self.get_required_attrs(sup_oc):
+                if attr not in attrs:
+                    attrs.append(attr)
+        if required:
+            for attr in self.get_required_attrs(oc):
+                if attr not in attrs:
+                    attrs.append(attr)
+        return attrs
