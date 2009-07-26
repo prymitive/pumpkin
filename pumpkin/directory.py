@@ -227,30 +227,55 @@ class Directory(object):
         else:
              raise Exception("Object class '%s' not found in schema" % oc)
 
-    def get_required_attrs(self, oc):
-        """Get list of all required attributes for given object class
+    def _get_objectclass_attrs(self, oc):
+        """Returns all object class attributes ([required], [additional])
         """
         oc_inst = self._get_oc_inst(oc)
-        attrs = [attr for attr in oc_inst.must]
-        for sup_oc in oc_inst.sup:
-            for attr in self.get_required_attrs(sup_oc):
-                if attr not in attrs:
-                    attrs.append(attr)
-        return attrs
 
-    def get_available_attrs(self, oc, required=False):
-        """Get list of all additional attributes that are available for given
-        object class
-        @param required: return also all required attributes
-        """
-        oc_inst = self._get_oc_inst(oc)
-        attrs = [attr for attr in oc_inst.may]
+        must = [attr for attr in oc_inst.must]
+
+        may = []
+        for attr in oc_inst.may:
+            if attr not in must:
+                may.append(attr)
+
         for sup_oc in oc_inst.sup:
-            for attr in self.get_required_attrs(sup_oc):
-                if attr not in attrs:
-                    attrs.append(attr)
-        if required:
-            for attr in self.get_required_attrs(oc):
-                if attr not in attrs:
-                    attrs.append(attr)
-        return attrs
+            (sup_must, sup_may) = self._get_objectclass_attrs(sup_oc)
+            for attr in sup_must:
+                if attr not in must:
+                    must.append(attr)
+            for attr in sup_may:
+                if attr not in may:
+                    may.append(attr)
+
+        # remove attrs from may that are also in must
+        for attr in may:
+            if attr in must:
+                may.remove(attr)
+
+        return (must, may)
+
+    def get_schema_attrs(self, model):
+        """Return tuple with schema attributes (must, may) for given model
+        """
+        may_attrs = []
+        must_attrs = []
+
+        for oc in model.get_private_classes():
+
+            (must, may) = self._get_objectclass_attrs(oc)
+
+            for attr in must:
+                if attr not in must_attrs:
+                    must_attrs.append(attr)
+
+            for attr in may:
+                if attr not in may_attrs:
+                    may_attrs.append(attr)
+
+        # remove attrs from may that are also in must
+        for attr in may_attrs:
+            if attr in must_attrs:
+                may_attrs.remove(attr)
+
+        return (must_attrs, may_attrs)

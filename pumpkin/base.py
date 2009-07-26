@@ -187,18 +187,14 @@ class Model(object):
     def _validate_model_fields(self):
         """Checks if all model fields are present in schema
         """
-        # get list of all attributes that can be store using all object classes
-        all_attrs = []
-        for oc in self.get_private_classes():
-            for attr in self._directory.get_available_attrs(oc, required=True):
-                all_attrs.append(attr)
+        (must, may) = self._directory.get_schema_attrs(self.__class__)
 
         for (field, instance) in self._get_fields().items():
-             if instance.attr not in all_attrs:
+             if instance.attr not in must + may:
                  raise Exception(
 """Can't store '%s' field with LDAP attribute '%s' using current schema and \
 object classes: %s, all available attrs: %s""" % (
-                    field, instance.attr, self.get_private_classes(), all_attrs
+                    field, instance.attr, self.get_private_classes(), must + may
                     )
                 )
 
@@ -387,13 +383,12 @@ object classes: %s, all available attrs: %s""" % (
         """Check if all attributes required by schema are set
         """
         ret = []
-        for oc in self.object_class:
-            # we get each attr in each object class and check if it is set
-            for attr in self._directory.get_required_attrs(oc):
-                for (name, instance) in self._get_fields().items():
-                    if instance.attr == attr:
-                        if getattr(self, name) is None:
-                            ret.append(name)
+        (must, may) = self._directory.get_schema_attrs(self.__class__)
+        for (name, instance) in self._get_fields().items():
+            for attr in must:
+                if instance.attr == attr:
+                    if getattr(self, name) is None:
+                        ret.append(name)
         return ret
 
     def save(self):

@@ -19,6 +19,7 @@ for pg in LDAP_CONN.search(PosixUser):
     print('\tuid: %s' % pg.uid)
     print('')
 
-print('OC info for: posixGroup')
-print('MAY : %s' % LDAP_CONN.get_available_attrs('posixGroup'))
-print('MUST: %s' % LDAP_CONN.get_required_attrs('posixGroup'))
+print('OC info for: PosixUser')
+(must, may) = LDAP_CONN.get_schema_attrs(PosixUser)
+print('MUST : %s' % must)
+print('MAY: %s' % may)
