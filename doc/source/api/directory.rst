@@ -1,6 +1,6 @@
 directory module
 =====================================
 
-.. automodule:: simpledir.directory
+.. automodule:: pumpkin.directory
    :members:
    :undoc-members:

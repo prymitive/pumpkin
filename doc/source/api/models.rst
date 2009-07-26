@@ -1,6 +1,6 @@
 models module
 =====================================
 
-.. automodule:: simpledir.models
+.. automodule:: pumpkin.models
    :members:
    :undoc-members:

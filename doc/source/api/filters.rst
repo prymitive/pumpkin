@@ -1,6 +1,6 @@
 filters module
 =====================================
 
-.. automodule:: simpledir.filters
+.. automodule:: pumpkin.filters
    :members:
    :undoc-members:

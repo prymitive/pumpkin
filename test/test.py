@@ -3,15 +3,15 @@
 """Test module
 """
 
-from simpledir import resource
-from simpledir import directory
-from simpledir.filters import eq
-from simpledir.fields import StringField
-from simpledir.fields import StringListField
-from simpledir.fields import IntegerField
-from simpledir.fields import IntegerListField
-from simpledir.base import Model
-from simpledir.models import PosixGroup
+from pumpkin import resource
+from pumpkin import directory
+from pumpkin.filters import eq
+from pumpkin.fields import StringField
+from pumpkin.fields import StringListField
+from pumpkin.fields import IntegerField
+from pumpkin.fields import IntegerListField
+from pumpkin.base import Model
+from pumpkin.models import PosixGroup
 
 
 import unittest

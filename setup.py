@@ -10,12 +10,12 @@ Created on 2009-05-24
 from setuptools import setup
 
 setup(
-    name='simpledir',
-    version='0.0.1',
+    name='pumpkin',
+    version='0.1.0-dev',
     description='Simple library for working with ldap',
     author='Łukasz Mierzwa',
     author_email='l.mierzwa@gmail.com',
-    packages=['simpledir'],
+    packages=['pumpkin'],
     install_requires=[
         'setuptools',
         'python-ldap',

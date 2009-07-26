@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# simpledir documentation build configuration file, created by
+# pumpkin documentation build configuration file, created by
 # sphinx-quickstart on Sat Jun 27 20:46:49 2009.
 #
 # This file is execfile()d with the current directory set to its containing dir.
@@ -41,7 +41,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'simpledir'
+project = u'pumpkin'
 copyright = u'2009, Łukasz Mierzwa'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -153,7 +153,7 @@ html_static_path = ['.static']
 #html_file_suffix = ''
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'simpledirdoc'
+htmlhelp_basename = 'pumpkindoc'
 
 
 # Options for LaTeX output
@@ -168,7 +168,7 @@ htmlhelp_basename = 'simpledirdoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, document class [howto/manual]).
 latex_documents = [
-  ('index', 'simpledir.tex', ur'simpledir Documentation',
+  ('index', 'pumpkin.tex', ur'pumpkin Documentation',
    ur'Łukasz Mierzwa', 'manual'),
 ]
 

@@ -1,6 +1,6 @@
-from simpledir.resource import LDAPResource
-from simpledir.directory import Directory
-from simpledir.models import PosixGroup, PosixUser
+from pumpkin.resource import LDAPResource
+from pumpkin.directory import Directory
+from pumpkin.models import PosixGroup, PosixUser
 
 LDAP_RES = LDAPResource()
 LDAP_RES.server = 'ldap://localhost'

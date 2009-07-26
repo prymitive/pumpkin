@@ -1,6 +1,6 @@
 objectlist module
 =====================================
 
-.. automodule:: simpledir.objectlist
+.. automodule:: pumpkin.objectlist
    :members:
    :undoc-members:

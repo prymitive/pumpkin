@@ -1,6 +1,6 @@
 base module
 =====================================
 
-.. automodule:: simpledir.base
+.. automodule:: pumpkin.base
    :members:
    :undoc-members:

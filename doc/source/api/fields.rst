@@ -1,6 +1,6 @@
 fields module
 =====================================
 
-.. automodule:: simpledir.fields
+.. automodule:: pumpkin.fields
    :members:
    :undoc-members:

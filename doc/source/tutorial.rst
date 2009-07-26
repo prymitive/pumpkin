@@ -5,12 +5,12 @@ Connecting to LDAP database
 ---------------------------
 
 Before we connect to LDAP database, we need to create
-:class:`~simpledir.resource.LDAPResource` instance and setup connection 
-parameters. After this we can create :class:`~simpledir.directory.Directory`
-instance using our :class:`~simpledir.resource.LDAPResource` as argument::
+:class:`~pumpkin.resource.LDAPResource` instance and setup connection 
+parameters. After this we can create :class:`~pumpkin.directory.Directory`
+instance using our :class:`~pumpkin.resource.LDAPResource` as argument::
 
-  from simpledir.resource import LDAPResource
-  from simpledir.directory import Directory
+  from pumpkin.resource import LDAPResource
+  from pumpkin.directory import Directory
 
   LDAP_RES = LDAPResource()
   LDAP_RES.server = 'ldap://localhost'
@@ -34,7 +34,7 @@ Reading and writing to LDAP using models
 ----------------------------------------
 
 To get a single entry (posixGroup in this example) from LDAP database we will
-create new instance of :class:`~simpledir.models.PosixGroup` model, mapped to
+create new instance of :class:`~pumpkin.models.PosixGroup` model, mapped to
 existing entry::
 
   >>> from models import PosixGroup
@@ -50,7 +50,7 @@ Now we can get and set it's attributes values::
 
 If we set new value to an attribute that is part of entry :term:`rdn` it will
 also rename our entry. Note that *cn* field is using 
-:class:`~simpledir.fields.StringField` type, so it is storing unicode string, we
+:class:`~pumpkin.fields.StringField` type, so it is storing unicode string, we
 must remeber that when we are setting new value::
 
   >>> pg.cn = u'NewCN'
@@ -63,15 +63,15 @@ Listing LDAP tree using models
 -------------------------------
 
 To list all entries in a given location we need to call
-:func:`~simpledir.directory.Directory.search` method on our
-:class:`~simpledir.directory.Directory` instance, remember that all locations
+:func:`~pumpkin.directory.Directory.search` method on our
+:class:`~pumpkin.directory.Directory` instance, remember that all locations
 are relative to basedn that we set on our 
-:class:`~~simpledir.resource.LDAPResource` instance::
+:class:`~~pumpkin.resource.LDAPResource` instance::
 
   >>> glist = LDAP_CONN.search('ou=groups', model=PosixGroup, recursive=False)
 
 As we can see we will get the list of all entries that are matching
-:class:`~simpledir.models.PosixGroup` model that are located directly
+:class:`~pumpkin.models.PosixGroup` model that are located directly
 above *ou=groups* location. Now lets print what we found::
 
   >>> for pg in glist:
@@ -94,7 +94,7 @@ for posixGroup is defined::
     member_uid = IntegerListField('memberUid')
 
 As we can see there are three fields and one of them is used as :term:`rdn`
-attribute. :class:`~simpledir.models.PosixGroup` model defines 'cn' as 
+attribute. :class:`~pumpkin.models.PosixGroup` model defines 'cn' as 
 :term:`rdn` so example below will create entry with :term:`dn`
 *cn=newPosixGroup,ou=groups,dc=company,dc=com*::
 

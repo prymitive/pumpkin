@@ -1,6 +1,6 @@
 resource module
 =====================================
 
-.. automodule:: simpledir.resource
+.. automodule:: pumpkin.resource
    :members:
    :undoc-members:

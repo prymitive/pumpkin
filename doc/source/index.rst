@@ -1,4 +1,4 @@
-Welcome to simpledir's documentation!
+Welcome to pumpkin's documentation!
 =====================================
 
 Contents:
