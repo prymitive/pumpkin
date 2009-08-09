@@ -6,10 +6,7 @@
 from pumpkin import resource
 from pumpkin import directory
 from pumpkin.filters import eq
-from pumpkin.fields import StringField
-from pumpkin.fields import StringListField
-from pumpkin.fields import IntegerField
-from pumpkin.fields import IntegerListField
+from pumpkin.fields import *
 from pumpkin.base import Model
 from pumpkin.models import PosixGroup
 

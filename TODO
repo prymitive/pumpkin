@@ -19,3 +19,9 @@
 #    field typu PasswordField w modelu i woła directory.mod_password_s(),
 #    do tego kwargsy enc=(plain,md5,sha1) itd., encode2str zwróci str zakodowanego
 #    przy użyciu odpowiedniej metody, sprawdzić czy nasze md5 == ldap md5
+
+# DNField - jak zrobić?
+# a) po prostu str
+# b) instancja modelu - ale jakiego modelu? nie wiadomo w momencie definicji
+#    modelu który ma zawierać DNField, nie ma jak tego przekazać potem
+# c) custom_func generujący instancje modelu
