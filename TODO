@@ -25,3 +25,5 @@
 # b) instancja modelu - ale jakiego modelu? nie wiadomo w momencie definicji
 #    modelu który ma zawierać DNField, nie ma jak tego przekazać potem
 # c) custom_func generujący instancje modelu
+
+# set rdn attr => rename

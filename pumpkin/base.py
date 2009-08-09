@@ -169,8 +169,12 @@ class Model(object):
         self._storage = {}
         for (attr, value) in attrs.items():
             self._store_attr(attr, value)
-        
+
+        # list of dn attrs generated from dn str
+        self._rdn_attrs = None
+        # location part of dn
         self._location = None
+        
         self._directory = directory
 
         self._validate_model_fields()
@@ -179,8 +183,11 @@ class Model(object):
             self._empty = True
         else:
             self._empty = False
-            self._rdn = ldap.dn.dn2str([ldap.dn.str2dn(dn)[0]]) 
-            self._location = ldap.dn.dn2str(ldap.dn.str2dn(dn)[1:])
+
+            self._rdn_attrs = ldap.dn.str2dn(dn)
+            self._rdn = ldap.dn.dn2str([self._rdn_attrs[0]])
+            self._location = ldap.dn.dn2str(self._rdn_attrs[1:])
+
             self.update(missing_only=True)
             self._validate_object_class()
 
@@ -241,6 +248,9 @@ object classes: %s, all available attrs: %s""" % (
         @param attr: attribute name
         @param value: new value for attribute
         """
+        if attr in self.get_rdn_attrs():
+            pass
+            #TODO rdn rename on set
         self._store_attr(attr, value)
 
     def _del_attr(self, attr):
@@ -302,13 +312,18 @@ object classes: %s, all available attrs: %s""" % (
                     ret[name] = instance
         return ret
 
-    def get_rdn_attrs(self):
+    def get_rdn_fields(self):
         """Model attributes used as rdn
         """
         if not isinstance(self._rdn_, list):
             return [self._rdn_]
         else:
             return self._rdn_
+
+    def get_rdn_attrs(self):
+        """LDAP attributes used as rdn
+        """
+        return [self._get_fields()[name].attr for name in self.get_rdn_fields()]
 
     def dn():
         doc = "Object distinguished name"        
@@ -328,7 +343,7 @@ object classes: %s, all available attrs: %s""" % (
             else:
                 ret = ''
                 for (name, instance) in self._get_fields().items():
-                    if name in self.get_rdn_attrs():
+                    if name in self.get_rdn_fields():
                         rdn_part = '%s=%s' % (instance.attr, getattr(self, name))
                         if ret != '':
                             ret = '+'.join(ret, rdn_part)

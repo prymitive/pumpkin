@@ -30,7 +30,7 @@ class QA(Model):
     """Testing model
     """
     _object_class_ = ['posixAccount', 'inetOrgPerson']
-    _rdn_ = 'cn'
+    _rdn_ = 'string'
     uid = StringField('uid')
     string = StringField('cn')
     string_list = StringListField('mail')
