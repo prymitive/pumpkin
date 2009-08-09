@@ -4,15 +4,10 @@
 
 # Statystyki
 
-# walidacja modeli przy pomocy schematu
-
 #  zrobić storage do wszystkich modeli, tak żeby 30 importów nie alokowało
 #      30 pełnych fieldów a ino 1
 
 # łańcuchowy save() - zmiana gid'a w PosixUser zmienia też members'ów w PosixGroup
-
-# required = False/True na fieldach + can_save() które mówi czy wszystko wymagane
-# fieldy są ustawione ALBO can_save() sprawdza schemat
 
 # PasswordField - jak?
 # b) StringField + metoda password() na modelu która działa tylko jak jest

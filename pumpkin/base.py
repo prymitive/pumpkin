@@ -177,6 +177,7 @@ class Model(object):
         
         self._directory = directory
 
+        self._validate_rdn()
         self._validate_model_fields()
 
         if dn == None:
@@ -214,6 +215,13 @@ object classes: %s, all available attrs: %s""" % (
                 raise TypeError(
                     "Object with dn %s does not have %s object class" % (self.dn, oc)
                 )
+
+    def _validate_rdn(self):
+        """Checks if all rdn fields are defined
+        """
+        for name in self.get_rdn_fields():
+            if name not in self._get_fields():
+                raise Exception("RDN field '%s' is missing from model" % name)
 
     def _isstored(self, attr):
         """Checks if given attribute is stored in local instance storage
