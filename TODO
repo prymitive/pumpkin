@@ -7,10 +7,6 @@
 #  zrobić storage do wszystkich modeli, tak żeby 30 importów nie alokowało
 #      30 pełnych fieldów a ino 1
 
-# łańcuchowy save() - zmiana gid'a w PosixUser zmienia też members'ów w PosixGroup
-# a) dodać listę affected_objects zawierającą listę referencji do instancji modeli
-# na których zostanie zawołany save()
-
 # PasswordField - jak?
 # b) StringField + metoda password() na modelu która działa tylko jak jest
 #    field typu PasswordField w modelu i woła directory.mod_password_s(),
@@ -22,3 +18,5 @@
 # b) instancja modelu - ale jakiego modelu? nie wiadomo w momencie definicji
 #    modelu który ma zawierać DNField, nie ma jak tego przekazać potem
 # c) custom_func generujący instancje modelu
+
+# wyjątki zrobić
