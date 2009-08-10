@@ -13,6 +13,7 @@ __all__ = [
     'models',
     'fields',
     'filters',
+    'exceptions',
 ]
 
 import directory
@@ -21,3 +22,4 @@ import base
 import models
 import fields
 import filters
+import exceptions
