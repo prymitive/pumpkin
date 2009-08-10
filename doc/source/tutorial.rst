@@ -68,11 +68,11 @@ To list all entries in a given location we need to call
 are relative to basedn that we set on our 
 :class:`~~pumpkin.resource.LDAPResource` instance::
 
-  >>> glist = LDAP_CONN.search('ou=groups', model=PosixGroup, recursive=False)
+  >>> glist = LDAP_CONN.search(PosixGroup, basedn='ou=groups,dc=company,dc=com' recursive=False)
 
 As we can see we will get the list of all entries that are matching
-:class:`~pumpkin.models.PosixGroup` model that are located directly
-above *ou=groups* location. Now lets print what we found::
+:class:`~pumpkin.models.PosixGroup` model located at
+'ou=groups,dc=company,dc=com' basedn. Now lets print what we found::
 
   >>> for pg in glist:
   ...     print(pg.dn)
@@ -102,7 +102,7 @@ attribute. :class:`~pumpkin.models.PosixGroup` model defines 'cn' as
   >>> pg.cn = 'Test group'
   >>> pg.gid_number = 1234
   >>> pg.member_uid = [1,2,3]
-  >>> pg.location = 'ou=groups,dc=company,dc=com'
+  >>> pg.set_parent('ou=groups,dc=company,dc=com')
   >>> pg.save()
   >>> print(pg.dn)
   cn=Test group,ou=groups,dc=company,dc=com

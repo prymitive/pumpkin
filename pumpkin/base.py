@@ -114,7 +114,7 @@ class Model(object):
     object_class = StringListField('objectClass', readonly=True)
 
     @classmethod
-    def get_private_classes(cls):
+    def private_classes(cls):
         """Get list of models private classes
         """
         # first get current class _object_class_
@@ -147,7 +147,7 @@ class Model(object):
             return self._get_fields()['object_class'].fget(self)
         else:
             # we got new, empty object, return default objectClass
-            return self.get_private_classes()
+            return self.private_classes()
 
 
     def __init__(self, directory, dn=None, attrs={}):
@@ -160,39 +160,35 @@ class Model(object):
         @param dn: LDAP object distinguished name
         @param attrs: dict with already fetch attributes, used when creating
         model instance from LDAP search
-
-        @ivar rdn: object relative distinguished name
-        @ivar location: object location 
-        @ivar dn: full object distinguished name (rdn + location)
         """
         # can't use attrs kwarg becouse all model instances will use same reference
         self._storage = {}
         for (attr, value) in attrs.items():
             self._store_attr(attr, value)
 
-        # list of dn attrs generated from dn str
-        self._rdn_attrs = None
-        # location part of dn
-        self._location = None
+        self._dn = dn
+        # used when changing object dn
+        self._olddn = None
+        # used (when creating new object) to store object parent dn
+        self._parent = None
         
         self._directory = directory
 
-        self._validate_rdn()
-        self._validate_model_fields()
+        # list of affected objects
+        self._affected = []
+
+        self._validate_rdn_fields()
+        self._validate_schema()
 
         if dn == None:
             self._empty = True
         else:
             self._empty = False
 
-            self._rdn_attrs = ldap.dn.str2dn(dn)
-            self._rdn = ldap.dn.dn2str([self._rdn_attrs[0]])
-            self._location = ldap.dn.dn2str(self._rdn_attrs[1:])
-
             self.update(missing_only=True)
             self._validate_object_class()
 
-    def _validate_model_fields(self):
+    def _validate_schema(self):
         """Checks if all model fields are present in schema
         """
         (must, may) = self._directory.get_schema_attrs(self.__class__)
@@ -202,7 +198,7 @@ class Model(object):
                  raise Exception(
 """Can't store '%s' field with LDAP attribute '%s' using current schema and \
 object classes: %s, all available attrs: %s""" % (
-                    field, instance.attr, self.get_private_classes(), must + may
+                    field, instance.attr, self.private_classes(), must + may
                     )
                 )
 
@@ -210,16 +206,16 @@ object classes: %s, all available attrs: %s""" % (
         """Checks if passed object dn matches our model. To do so we check if
         all object classes defined in model are present in object.
         """
-        for oc in self.get_private_classes():
+        for oc in self.private_classes():
             if oc not in self.object_class:
                 raise TypeError(
                     "Object with dn %s does not have %s object class" % (self.dn, oc)
                 )
 
-    def _validate_rdn(self):
+    def _validate_rdn_fields(self):
         """Checks if all rdn fields are defined
         """
-        for name in self.get_rdn_fields():
+        for name in self.rdn_fields():
             if name not in self._get_fields():
                 raise Exception("RDN field '%s' is missing from model" % name)
 
@@ -230,6 +226,16 @@ object classes: %s, all available attrs: %s""" % (
             return True
         else:
             return False
+
+    def _ldap_dn(self):
+        """Return current object dn in LDAP, always returns dn that should be
+        used for searches, dn can change when setting new parent dn or setting
+        new value to rdn attributes so we need this
+        """
+        if self._olddn:
+            return self._olddn
+        else:
+            return self.dn
 
     def _store_attr(self, attr, value):
         """Store attribute in local storage
@@ -245,7 +251,9 @@ object classes: %s, all available attrs: %s""" % (
         elif self.isnew():
             return None
         else:
-            value = self._directory.get_attr(self.dn, attr)
+            # if object got renamed we must keep searching using old dn until save()
+
+            value = self._directory.get_attr(self._ldap_dn(), attr)
             self._store_attr(attr, value)
             return value
 
@@ -256,9 +264,15 @@ object classes: %s, all available attrs: %s""" % (
         @param attr: attribute name
         @param value: new value for attribute
         """
-        if attr in self.get_rdn_attrs():
-            pass
-            #TODO rdn rename on set
+        if attr in self.rdn_attrs() and not self.isnew():
+            # we are setting new value to attribute that is part of object rdn
+            # we handle it this way
+            # 1. store current object dn
+            # 2. set rdn attribute to new value
+            # 3. check during save() if we got old dn, if true rename object
+            # before actual save()
+            if self._olddn is None:
+                self._olddn = self.dn
         self._store_attr(attr, value)
 
     def _del_attr(self, attr):
@@ -266,6 +280,29 @@ object classes: %s, all available attrs: %s""" % (
         be removed from LDAP after calling save()
         """
         self._store_attr(attr, None)
+
+    def _get_fields(self):
+        """Returns dict with fields name -> instance mappings
+        """
+        ret = self._fields
+        for base in self.__class__.__bases__:
+            for (name, instance) in base._fields.items():
+                if name not in ret.keys():
+                    ret[name] = instance
+        return ret
+
+    def _generate_rdn(self):
+        """Generate new object RDN using _rdn_ fields
+        """
+        ret = ''
+        for (name, instance) in self._get_fields().items():
+            if name in self.rdn_fields():
+                rdn_part = '%s=%s' % (instance.attr, getattr(self, name))
+                if ret != '':
+                    ret = '+'.join(ret, rdn_part)
+                else:
+                    ret = rdn_part
+        return ret
 
     def get_attributes(self):
         """Returns dict with all attributes that are set, values will be in LDAP
@@ -293,7 +330,7 @@ object classes: %s, all available attrs: %s""" % (
                 if not self._isstored(instance.attr):
                     ldap_attrs.append(instance.attr)
         else:
-            ldap_attrs = self._get_fields().values()
+            ldap_attrs = [ref.attr for ref in self._get_fields().values()]
 
         # remove lazy fields
         if not force:
@@ -302,7 +339,7 @@ object classes: %s, all available attrs: %s""" % (
                     ldap_attrs.remove(instance.attr)
 
         if ldap_attrs != []:
-            for (attr, value) in self._directory.get_attrs(self.dn, ldap_attrs).items():
+            for (attr, value) in self._directory.get_attrs(self._ldap_dn(), ldap_attrs).items():
                 self._store_attr(attr, value)
 
     def isnew(self):
@@ -310,17 +347,7 @@ object classes: %s, all available attrs: %s""" % (
         """
         return self._empty
 
-    def _get_fields(self):
-        """Returns dict with fields name -> instance mappings
-        """
-        ret = self._fields
-        for base in self.__class__.__bases__:
-            for (name, instance) in base._fields.items():
-                if name not in ret.keys():
-                    ret[name] = instance
-        return ret
-
-    def get_rdn_fields(self):
+    def rdn_fields(self):
         """Model attributes used as rdn
         """
         if not isinstance(self._rdn_, list):
@@ -328,81 +355,12 @@ object classes: %s, all available attrs: %s""" % (
         else:
             return self._rdn_
 
-    def get_rdn_attrs(self):
+    def rdn_attrs(self):
         """LDAP attributes used as rdn
         """
-        return [self._get_fields()[name].attr for name in self.get_rdn_fields()]
+        return [self._get_fields()[name].attr for name in self.rdn_fields()]
 
-    def dn():
-        doc = "Object distinguished name"        
-        def fget(self):
-            return '%s,%s' % (self.rdn, self.location)
-        return locals()
-    dn = property(**dn())
-
-    def rdn():
-        doc = """Object relative disinguished name. For every attribute present
-        in models _rdn_ list, we get it value for current model and join 
-        it using '+'.
-        """
-        def fget(self):
-            if not self.isnew():
-                return self._rdn
-            else:
-                ret = ''
-                for (name, instance) in self._get_fields().items():
-                    if name in self.get_rdn_fields():
-                        rdn_part = '%s=%s' % (instance.attr, getattr(self, name))
-                        if ret != '':
-                            ret = '+'.join(ret, rdn_part)
-                        else:
-                            ret = rdn_part
-                return ret
-        return locals()
-    rdn = property(**rdn())
-
-    def location():
-        doc = "Object location" 
-        def fget(self):
-            return self._location
-        def fset(self, new_location):
-            if self.isnew():
-                self._location = new_location
-            else:
-                self.move(new_location)
-
-        return locals()
-    location = property(**location())
-
-    def set_password(self, oldpass, newpass):
-        """Change current object password in LDAP database
-
-        @param oldpass: old password
-        @param newpass: new password
-        """
-        # FIXME refactor to save()?
-        if self.isnew():
-            raise Exception, "Can't change password on empty object"
-        else:
-            self._directory.passwd(self.dn, oldpass, newpass)
-        
-    def rename(self, newrdn):
-        """Rename object
-        @param newdn: new relative distinguished name for current object
-        """
-        # FIXME refactor to save()?
-        if self.isnew():
-            raise Exception, "Can't rename empty object"
-        else:
-            self._directory.modrdn_s(self.dn, newrdn)
-
-    def move(self, new_location):
-        """Move current object to new location
-        """
-        self._rdn, self._location = self._directory.move(
-            self.dn, self.rdn, new_location)
-
-    def get_missing_fields(self):
+    def missing_fields(self):
         """Check if all attributes required by schema are set
         """
         ret = []
@@ -419,21 +377,30 @@ object classes: %s, all available attrs: %s""" % (
         to LDAP, update self._rdn and mark it non-empty, if instance is
         non-empty it will write all attributes to LDAP
         """
-        missing = self.get_missing_fields()
-        if missing != []:
-            raise Exception(
-                "Can't save when required fields are missing: %s" % missing)
-        
+        if self.missing_fields() != []:
+            raise Exception("Can't save when required fields are missing: %s" %
+                self.missing_fields())
+
         record = self.get_attributes()
         if self.isnew():
-            if self.location is None:
-                raise Exception('Location not set')
-
             self._directory.add_object(self.dn, record)
-            self._rdn = self.rdn
             self._empty = False
         else:
+
+            if self._olddn:
+                self._directory.rename(
+                    self._olddn,
+                    self._generate_rdn(),
+                    parent = self._parent
+                )
+            self._olddn = None
+
             self._directory.set_attrs(self.dn, record)
+
+        # call save() on all affected instances
+        for ref in self._affected:
+            ref.save()
+            self._affected.remove(ref)
 
     def delete(self):
         """Delete object from LDAP
@@ -442,3 +409,35 @@ object classes: %s, all available attrs: %s""" % (
             raise Exception, "Can't delete empty object"
         else:
             self._directory.delete(self.dn)
+
+    def set_parent(self, parent_dn):
+        """Set parrent object dn, required when creating new object, can also
+        be used to move object aroudn LDAP tree
+        """
+        if self._olddn is None and not self.isnew():
+            self._olddn = self.dn
+        self._parent = parent_dn
+
+    def dn():
+        doc = "Object distinguished name"
+        def fget(self):
+            if self._parent:
+                return '%s,%s' % (self._generate_rdn(), self._parent)
+            elif self._dn:
+                return self._dn
+            else:
+                raise Exception("Object dn and parent dn not set!")
+        return locals()
+    dn = property(**dn())
+
+    def affected(self, ref):
+        """Add new affected model instance to local list, when calling save()
+        on self instance we will also call save() on all instances from this
+        list
+        """
+        for item in self._affected:
+            if item.dn == ref.dn:
+                raise Exception(
+                    "Object with dn: %s is already affected!" % ref.dn)
+
+        self._affected.append(ref)

@@ -8,22 +8,12 @@ from pumpkin import directory
 from pumpkin.filters import eq
 from pumpkin.fields import *
 from pumpkin.base import Model
-from pumpkin.models import PosixGroup
-
+from pumpkin.models import PosixGroup, PosixUser
 
 import unittest
 import time
 
-
-LDAP_RES = resource.LDAPResource()
-LDAP_RES.server = 'ldap://localhost'
-LDAP_RES.login = 'cn=Manager,dc=company,dc=com'
-LDAP_RES.password = 'dupadupa'
-LDAP_RES.TLS = False
-LDAP_RES.basedn = 'dc=company,dc=com'
-LDAP_RES.method = resource.AUTH_SIMPLE
-
-LDAP_CONN = directory.Directory(LDAP_RES)
+from conn import LDAP_CONN
 
 
 class QA(Model):
@@ -67,9 +57,9 @@ class Test(unittest.TestCase):
                          [u'inetOrgPerson', u'posixAccount', u'top'])
 
     def test_private_class(self):
-        print('Model private class: %s' % qa.get_private_classes())
+        print('Model private class: %s' % qa.private_classes())
         self.assertEqual(
-            qa.get_private_classes(), ['posixAccount', 'inetOrgPerson'])
+            qa.private_classes(), ['posixAccount', 'inetOrgPerson'])
 
     def test_fields(self):
         print('Model fields: %s' %  qa._get_fields().keys())
@@ -149,7 +139,7 @@ class Test(unittest.TestCase):
         self.pg.gid = 1234
         self.pg.members = [1, 2, 3, 4, 5]
         self.pg.remove_member(3)
-        self.pg.location = 'ou=groups,dc=company,dc=com'
+        self.pg.set_parent('ou=groups,dc=company,dc=com')
         self.pg.save()
         
         self.assertEqual(self.pg.dn, 
@@ -181,8 +171,26 @@ class Test(unittest.TestCase):
         self.pg = LDAP_CONN.get(PosixGroup, search_filter=eq('gidNumber', 345))
         print('Old LDAP dn: %s' % self.pg.dn)
         self.assertEqual(self.pg.dn, 'cn=nazwa,ou=groups,dc=company,dc=com')
-        self.pg.move(None)
+        self.pg.set_parent('dc=company,dc=com')
+        self.pg.save()
         print('New LDAP dn: %s' % self.pg.dn)
         self.assertEqual(self.pg.dn, 'cn=nazwa,dc=company,dc=com')
-        self.pg.move('ou=groups')
+        self.pg.set_parent('ou=groups,dc=company,dc=com')
+        self.pg.save()
         self.assertEqual(self.pg.dn, 'cn=nazwa,ou=groups,dc=company,dc=com')
+
+    def test_affected(self):
+        """Test saving with affected objects
+        """
+        self.pg = PosixGroup(LDAP_CONN, 'cn=nazwa,ou=groups,dc=company,dc=com')
+        self.pu = PosixUser(LDAP_CONN, 'cn=Max Blank,ou=users,dc=company,dc=com')
+        self.assertEqual(self.pg.gid, self.pu.gid)
+        self.pg.gid = 1094
+        self.pg.save()
+        self.pu.update()
+        self.assertEqual(self.pg.gid, self.pu.gid)
+        self.pg.gid = 345
+        self.pg.save()
+        self.pu.update()
+        self.assertEqual(self.pg.gid, self.pu.gid)
+        

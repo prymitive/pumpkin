@@ -15,6 +15,8 @@ from fields import IntegerListField
 from fields import StringField
 from fields import StringListField
 
+from filters import eq
+
 
 class PosixUser(Model):
     """posixAccount model
@@ -45,6 +47,20 @@ class PosixGroup(Model):
     name = StringField('cn')
     gid = IntegerField('gidNumber')
     members = IntegerListField('memberUid')
+
+    def _gid_fset(self, value):
+        """Custom fset needed to keep members gid in sync
+        """
+        IntegerField.fset(IntegerField('gidNumber'), self, value) #FIXME ?!
+        if self.members:
+            for uid in self.members:
+                member = self._directory.get(
+                    PosixUser,
+                    search_filter=eq(PosixUser.uid, uid)
+                )
+                if member:
+                    member.gid = self.gid
+                    self.affected(member)
 
     def add_member(self, uid):
         """Add given user uid to member list

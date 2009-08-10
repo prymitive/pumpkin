@@ -95,18 +95,16 @@ class Directory(object):
         self._ldapconn.unbind_s()
         self._connected = False
 
-    def search(self, model, location=None, recursive=True, search_filter=None):
+    def search(self, model, basedn=None, recursive=True, search_filter=None):
         """Search for all objects matching model and return list of model
         instances
         """
         ocs = []
-        for oc in model.get_private_classes():
+        for oc in model.private_classes():
             ocs.append(filters.eq('objectClass', oc))
         model_filter = filters.opand(*ocs)
 
-        if location:
-            basedn = '%s,%s' % (location, self._resource.basedn)
-        else:
+        if basedn is None:
             basedn = self._resource.basedn
 
         if recursive:
@@ -185,24 +183,10 @@ class Directory(object):
         """
         self._ldapconn.passwd_s(ldap_dn, oldpass, newpass)
 
-    def rename(self, old_dn, new_dn):
-        """Rename object from old_dn to new_dn
+    def rename(self, old_dn, new_rdn, parent=None):
+        """Rename object
         """
-        self._ldapconn.rename_s(old_dn, new_dn)
-
-    def move(self, ldap_dn, newrdn, new_location):
-        """Move given object to new location, return tuple with new rdn and new
-        location
-        """
-        # if we got empty location we use basedn as new location
-        # else we use new location + basedn
-        if new_location and new_location != '':
-            new_location = '%s,%s' % (new_location, self._resource.basedn)
-        else:
-            new_location = self._resource.basedn
-
-        self._ldapconn.rename_s(ldap_dn, newrdn, newsuperior=new_location)
-        return (newrdn, new_location)
+        self._ldapconn.rename_s(old_dn, new_rdn, newsuperior=parent)
 
     def delete(self, ldap_dn):
         """Delete object ldap_dn from LDAP
@@ -261,7 +245,7 @@ class Directory(object):
         may_attrs = []
         must_attrs = []
 
-        for oc in model.get_private_classes():
+        for oc in model.private_classes():
 
             (must, may) = self._get_objectclass_attrs(oc)
 
