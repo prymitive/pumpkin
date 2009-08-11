@@ -117,7 +117,12 @@ class Directory(object):
         else:
             final_filter = model_filter
 
-        data = self._ldapconn.search_s(basedn, scope, final_filter)
+        data = self._ldapconn.search_s(
+            basedn,
+            scope,
+            final_filter,
+            attrlist=model.ldap_attributes()
+        )
 
         ret = ObjectList()
         for (dn, attrs) in data:

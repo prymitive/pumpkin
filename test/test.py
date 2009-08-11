@@ -3,8 +3,6 @@
 """Test module
 """
 
-from pumpkin import resource
-from pumpkin import directory
 from pumpkin.filters import eq
 from pumpkin.fields import *
 from pumpkin.base import Model
@@ -129,7 +127,6 @@ class Test(unittest.TestCase):
         qa.custom_func = u'New custom set value'
         print('LDAP custom_set: %s' % qa.custom_func)
         self.assertEqual(qa.custom_func, u'New custom set value')
-
 
     def test_create_object(self):
         """Test creating new object, removing single attribute, deleting object

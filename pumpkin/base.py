@@ -9,11 +9,8 @@ Created on 2009-06-11
 
 from functools import partial
 
-import ldap.dn
-
-from fields import Field
-from fields import StringListField
-
+from fields import Field, StringListField
+import exceptions
 
 class _model(type):
     """Metaclass for Model. We parse Model instance namespace looking for Field
@@ -114,6 +111,17 @@ class Model(object):
     object_class = StringListField('objectClass', readonly=True)
 
     @classmethod
+    def _get_fields(cls):
+        """Returns dict with fields name -> instance mappings
+        """
+        ret = cls._fields
+        for base in cls.__bases__:
+            for (name, instance) in base._fields.items():
+                if name not in ret.keys():
+                    ret[name] = instance
+        return ret
+
+    @classmethod
     def private_classes(cls):
         """Get list of models private classes
         """
@@ -137,6 +145,12 @@ class Model(object):
                     ret.append(pclass)
         return ret
 
+    @classmethod
+    def ldap_attributes(cls):
+        """Get list of ldap attributes used by model
+        """
+        return [ref.attr for ref in cls._get_fields().values()]
+
     def _object_class_fget(self):
         """Custom fget for getting objectClass, for new object it will return
         _object_class_, for storred objects it will return
@@ -159,12 +173,17 @@ class Model(object):
         @param directory: LDAP directory instance used for lookups
         @param dn: LDAP object distinguished name
         @param attrs: dict with already fetch attributes, used when creating
-        model instance from LDAP search
+        model instance from LDAP search, must contain all attributes, missing
+        attributes will be set to None
         """
-        # can't use attrs kwarg becouse all model instances will use same reference
+        # can't use attrs kwarg because all model instances will use same reference
         self._storage = {}
         for (attr, value) in attrs.items():
             self._store_attr(attr, value)
+        if attrs != {}:
+            for instance in self._get_fields().values():
+                if not self._isstored(instance.attr):
+                    self._store_attr(instance.attr, None)
 
         self._dn = dn
         # used when changing object dn
@@ -195,7 +214,7 @@ class Model(object):
 
         for (field, instance) in self._get_fields().items():
              if instance.attr not in must + may:
-                 raise Exception(
+                 raise exceptions.SchemaValidationError(
 """Can't store '%s' field with LDAP attribute '%s' using current schema and \
 object classes: %s, all available attrs: %s""" % (
                     field, instance.attr, self.private_classes(), must + may
@@ -208,7 +227,7 @@ object classes: %s, all available attrs: %s""" % (
         """
         for oc in self.private_classes():
             if oc not in self.object_class:
-                raise TypeError(
+                raise exceptions.ModelNotMatched(
                     "Object with dn %s does not have %s object class" % (self.dn, oc)
                 )
 
@@ -217,7 +236,7 @@ object classes: %s, all available attrs: %s""" % (
         """
         for name in self.rdn_fields():
             if name not in self._get_fields():
-                raise Exception("RDN field '%s' is missing from model" % name)
+                raise exceptions.InvalidModel("RDN field '%s' is missing from model" % name)
 
     def _isstored(self, attr):
         """Checks if given attribute is stored in local instance storage
@@ -252,7 +271,6 @@ object classes: %s, all available attrs: %s""" % (
             return None
         else:
             # if object got renamed we must keep searching using old dn until save()
-
             value = self._directory.get_attr(self._ldap_dn(), attr)
             self._store_attr(attr, value)
             return value
@@ -280,16 +298,6 @@ object classes: %s, all available attrs: %s""" % (
         be removed from LDAP after calling save()
         """
         self._store_attr(attr, None)
-
-    def _get_fields(self):
-        """Returns dict with fields name -> instance mappings
-        """
-        ret = self._fields
-        for base in self.__class__.__bases__:
-            for (name, instance) in base._fields.items():
-                if name not in ret.keys():
-                    ret[name] = instance
-        return ret
 
     def _generate_rdn(self):
         """Generate new object RDN using _rdn_ fields
