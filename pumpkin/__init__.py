@@ -14,6 +14,7 @@ __all__ = [
     'fields',
     'filters',
     'exceptions',
+    'serialize',
 ]
 
 import directory
@@ -23,3 +24,4 @@ import models
 import fields
 import filters
 import exceptions
+import serialize

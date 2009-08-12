@@ -13,3 +13,4 @@ Contents:
    models.rst
    objectlist.rst
    resource.rst
+   serialize.rst
