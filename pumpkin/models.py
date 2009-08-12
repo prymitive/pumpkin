@@ -9,7 +9,7 @@ Created on 2009-06-07
 
 from base import Model
 
-from fields import Field
+from fields import BinaryField
 from fields import IntegerField
 from fields import IntegerListField
 from fields import StringField
@@ -34,7 +34,7 @@ class PosixUser(Model):
     home = StringField('homeDirectory')
     #TODO password = PasswordField('userPassword')
     mobile = StringListField('mobile')
-    photo = Field('jpegPhoto') # binary field so we just use Field
+    photo = BinaryField('jpegPhoto')
     mail = StringListField('mail')
 
 

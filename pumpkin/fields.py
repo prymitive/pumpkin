@@ -71,6 +71,8 @@ class Field(object):
         """
         if values is None:
             raise Exception('LDAP value is None')
+        elif not isinstance(values, list):
+            return [values]
         else:
             return values
 
@@ -246,3 +248,14 @@ class BooleanField(Field):
         else:
             raise ValueError("Unknown value '%s', not '%s' or '%s'" % (
                 values, self.true, self.false))
+
+
+class BinaryField(Field):
+    """Single valued binary field
+    """
+
+    def decode2local(self, values, instance=None):
+        """Return single value
+        """
+        check_singleval(self.attr, values)
+        return get_singleval(values)
