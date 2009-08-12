@@ -220,18 +220,24 @@ class BooleanField(Field):
         self.false = kwargs.get('false', 'False')
 
     def validate(self, values):
+        """Check if value is True or False
+        """
         if values in [True, False]:
             return values
         else:
             raise ValueError("Not a boolean value: %s" % values)
 
     def encode2str(self, values, instance=None):
+        """Returns str self.true or self.false
+        """
         if values:
             return [self.true]
         else:
             return [self.false]
 
     def decode2local(self, values, instance=None):
+        """Returns True or False
+        """
         check_singleval(self.attr, values)
         if get_singleval(values) == self.true:
             return True
