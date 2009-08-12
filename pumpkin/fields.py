@@ -189,8 +189,8 @@ class IntegerField(IntegerListField):
         if isinstance(values, int):
             return values
         else:
-            raise ValueError, "Not a int value: %s" % values
-        
+            raise ValueError("Not a int value: %s" % values)
+    
     
     def encode2str(self, values, instance=None):
         """Returns str value
@@ -202,3 +202,41 @@ class IntegerField(IntegerListField):
         """
         check_singleval(self.attr, values)
         return get_singleval(IntegerListField.decode2local(self, values))
+
+
+class BooleanField(Field):
+    """Boolean field
+    """
+
+    def __init__(self, name, **kwargs):
+        """
+        @ivar true: str representing True, this str will be saved to LDAP if
+        field value is True, default 'True'
+        @ivar flase: str representing False, this str will be saved to LDAP if
+        field value is False, default 'False'
+        """
+        Field.__init__(self, name, **kwargs)
+        self.true = kwargs.get('true', 'True')
+        self.false = kwargs.get('false', 'False')
+
+    def validate(self, values):
+        if values in [True, False]:
+            return values
+        else:
+            raise ValueError("Not a boolean value: %s" % values)
+
+    def encode2str(self, values, instance=None):
+        if values:
+            return [self.true]
+        else:
+            return [self.false]
+
+    def decode2local(self, values, instance=None):
+        check_singleval(self.attr, values)
+        if get_singleval(values) == self.true:
+            return True
+        elif get_singleval(values) == self.false:
+            return False
+        else:
+            raise ValueError("Unknown value '%s', not '%s' or '%s'" % (
+                values, self.true, self.false))

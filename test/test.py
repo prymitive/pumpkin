@@ -22,7 +22,6 @@ class QA(Model):
     uid = StringField('uid')
     string = StringField('cn')
     string_list = StringListField('mail')
-#    singleval_check = StringField('mail') #TODO
     integer = IntegerField('uidNumber')
     integer_list = IntegerListField('mobile')
     integer_ro =  IntegerField('gidNumber', readonly=True)
@@ -30,6 +29,7 @@ class QA(Model):
     string_default = StringField('homeDirectory', readonly=True, default='/')
     custom_func = StringField('sn')
     custom_func_value = u'Custom get value'
+    bool = BooleanField('initials')
 
     def _custom_func_fget(self):
         """Simple fget function for 'custom_func' field
@@ -63,7 +63,7 @@ class Test(unittest.TestCase):
         print('Model fields: %s' %  qa._get_fields().keys())
         self.assertEqual(qa._get_fields().keys(), [
             'integer_list', 'custom_func', 'string_rw', 'string_list',
-            'integer_ro', 'integer', 'string_default', 'object_class',
+            'integer_ro', 'bool', 'integer', 'string_default', 'object_class',
             'string', 'uid']
         )
 
@@ -87,11 +87,6 @@ class Test(unittest.TestCase):
         """
         print('LDAP integer: %s' % qa.integer)
         self.assertEqual(qa.integer, 1000)
-
-    def test_integer_ro(self):
-        """Test writing to read-only integer field
-        """
-        pass #TODO
 
     def test_string_default(self):
         """Test reading read-only string with default value
@@ -190,4 +185,15 @@ class Test(unittest.TestCase):
         self.pg.save()
         self.pu.update()
         self.assertEqual(self.pg.gid, self.pu.gid)
-        
+
+    def test_bool(self):
+        """Test reading and writing to bool field
+        """
+        print('LDAP bool: %s' % qa.bool)
+        self.assertEqual(qa.bool, True)
+        qa.bool = False
+        self.assertEqual(qa.bool, False)
+        qa.save()
+        self.assertEqual(qa.bool, False)
+        qa.bool = True
+        self.assertEqual(qa.bool, True)
