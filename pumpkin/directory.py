@@ -65,7 +65,7 @@ class Directory(object):
                 raise Exception('python-ldap is built without sasl support')
         else:
             raise Exception("Unknown authorization method")
-        
+
         self._connected = True
 
 
@@ -211,8 +211,9 @@ class Directory(object):
         """
         for oids in self._schema.listall(schema.ObjectClass):
             obj = self._schema.get_obj(schema.ObjectClass, oids)
-            if oc in obj.names:
-                return obj
+            for name in obj.names:
+                if oc.lower() == name.lower():
+                    return obj
         else:
              raise Exception("Object class '%s' not found in schema" % oc)
 

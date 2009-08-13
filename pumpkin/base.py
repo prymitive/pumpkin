@@ -17,13 +17,13 @@ class _model(type):
     instances, every found instance is added to Model instance as a property.
     Each field can have custom fset and fget functions, they are defined
     as a function named _%field_{fset, fget}, where %field is name of the field.
-    
+
     Example:
     class User(Model):
         uid = StringField('uid')
     this will define Your custom Model with uid field that will be mapped
     to 'uid' attribute in LDAP database.
-    
+
     Example custom fget function for uid field above:
         def uid_fget(self):
             return 'Custom value'
@@ -185,12 +185,19 @@ class Model(object):
                 if not self._isstored(instance.attr):
                     self._store_attr(instance.attr, None)
 
-        self._dn = dn
+        if dn:
+            if isinstance(dn, unicode):
+                self._dn = dn
+            else:
+                self._dn = unicode(dn, 'utf-8')
+        else:
+            self._dn = None
+
         # used when changing object dn
         self._olddn = None
         # used (when creating new object) to store object parent dn
         self._parent = None
-        
+
         self._directory = directory
 
         # list of affected objects

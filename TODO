@@ -29,3 +29,5 @@
 # 1. save()
 # 2. zmiana fieldów w _rdn_
 # 3. set_parent()
+
+# małe i duże litery są przez pumpkin'a rozróżnianie ale ldap je olewa
