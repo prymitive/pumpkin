@@ -31,3 +31,7 @@
 # 3. set_parent()
 
 # małe i duże litery są przez pumpkin'a rozróżnianie ale ldap je olewa
+
+# ModelField i ModelListField - przechowuje dn'y innych obiektów, zwraca
+# instancje model z podanej listy, tylko co ma zwracać jak dn wskazuje na obiekt
+# który nie istnieje

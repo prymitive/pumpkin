@@ -319,9 +319,12 @@ object classes: %s, all available attrs: %s""" % (
                     ret = rdn_part
         return ret
 
-    def get_attributes(self):
+    def get_attributes(self, all=True):
         """Returns dict with all attributes that are set, values will be in LDAP
         format (list of str)
+
+        @ivar all: if True return all attributes, even not set, if False return
+        only attributes with value
         """
         # we need to make sure that objectClass is set
         record = {
@@ -329,7 +332,7 @@ object classes: %s, all available attrs: %s""" % (
                 self.object_class),
         }
         for (attr, value) in self._storage.items():
-            if attr not in record.keys():
+            if (value is not None or all) and attr not in record.keys():
                 record[attr] = value
         return record
 
@@ -396,7 +399,7 @@ object classes: %s, all available attrs: %s""" % (
             raise Exception("Can't save when required fields are missing: %s" %
                 self.missing_fields())
 
-        record = self.get_attributes()
+        record = self.get_attributes(all=False)
         if self.isnew():
             self._directory.add_object(self.dn, record)
             self._empty = False
