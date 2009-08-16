@@ -1,5 +1,5 @@
-Shor tutorial
-=============
+Short tutorial
+==============
 
 Connecting to LDAP database
 ---------------------------
@@ -7,7 +7,7 @@ Connecting to LDAP database
 Before we connect to LDAP database, we need to create
 :class:`~pumpkin.resource.LDAPResource` instance and setup connection 
 parameters. After this we can create :class:`~pumpkin.directory.Directory`
-instance using our :class:`~pumpkin.resource.LDAPResource` as argument::
+instance and connect using our :class:`~pumpkin.resource.LDAPResource`::
 
   from pumpkin.resource import LDAPResource
   from pumpkin.directory import Directory
@@ -20,7 +20,8 @@ instance using our :class:`~pumpkin.resource.LDAPResource` as argument::
   LDAP_RES.basedn = 'dc=company,dc=com'
   LDAP_RES.method = resource.AUTH_SIMPLE
 
-  LDAP_CONN = Directory(LDAP_RES)
+  LDAP_CONN = Directory()
+  LDAP_CONN.connect(LDAP_RES)
 
 In example above we will connect to LDAP server at localhost, the connection
 will authenticate using simple bind operation and we won't be using TLS for
