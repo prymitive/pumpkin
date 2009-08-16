@@ -8,4 +8,5 @@ LDAP_RES.password = 'dupadupa'
 LDAP_RES.TLS = False
 LDAP_RES.basedn = 'dc=company,dc=com'
 
-LDAP_CONN = Directory(LDAP_RES)
+LDAP_CONN = Directory()
+LDAP_CONN.connect(LDAP_RES)

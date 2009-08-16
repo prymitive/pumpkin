@@ -35,3 +35,11 @@
 # ModelField i ModelListField - przechowuje dn'y innych obiektów, zwraca
 # instancje model z podanej listy, tylko co ma zwracać jak dn wskazuje na obiekt
 # który nie istnieje
+
+# @reconnect
+
+# rekursywny delete?
+
+# recursywny rename?
+
+# catchall model? _object_class_ = '*'

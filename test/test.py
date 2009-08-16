@@ -144,7 +144,7 @@ class Test(unittest.TestCase):
         self.assertEqual(self.pgtest.object_class, [u'posixGroup'])
         self.assertEqual(self.pgtest.name, u'Test group')
         self.assertEqual(self.pgtest.gid, 1234)
-        self.assertEqual(self.pgtest.members, None)
+        self.assertEqual(self.pgtest.members, [1, 2, 4, 5])
 
         self.pg.delete()
 

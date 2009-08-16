@@ -17,17 +17,14 @@ class Directory(object):
     """Ldap connection object
     """
 
-    def __init__(self, res):
+    def __init__(self):
         """Create connection to ldap server
         """
         object.__init__(self)
-        self._resource = res
+        self._resource = False
         self._connected = False
         self._ldapconn = None
         self._schema = None
-
-        self.connect()
-        self._read_schema()
 
     def _start_tls(self):
         """Starts tls session if tls is enabled
@@ -81,13 +78,15 @@ class Directory(object):
         """
         return self._connected
 
-    def connect(self):
+    def connect(self, res):
         """Connect to LDAP server
         """
+        self._resource = res
         self._ldapconn = ldap.initialize(self._resource.server)
         self._ldapconn.protocol_version = ldap.VERSION3
         self._start_tls()
         self._bind()
+        self._read_schema()
 
     def disconnect(self):
         """Disconnect from LDAP server
