@@ -6,12 +6,47 @@ Created on 2009-05-24
 @license: GPLv3: http://www.gnu.org/licenses/gpl-3.0.txt
 '''
 
+
+from functools import wraps
+
 import ldap
 from ldap import sasl, schema
 
 import resource
 import filters
+import exceptions
 from objectlist import ObjectList
+
+
+def _try_reconnect(directory):
+    """Try to connect to LDAP
+    """
+    try:
+        directory.disconnect()
+        directory._connect()
+    except:
+        pass
+
+def reconnect(func):
+    """Ldap reconnection wrapper
+    """
+    @wraps(func)
+    def newfunc(*args, **kwargs):
+        for cnt in range(10):
+            try:
+                if not args[0].isconnected():
+                    _try_reconnect(args[0])
+                return func(*args, **kwargs)
+            except ldap.SERVER_DOWN, e:
+                #TODO print warnings
+                _try_reconnect(args[0])
+            except ldap.TIMEOUT, e:
+                _try_reconnect(args[0])
+            except ldap.CONNECT_ERROR, e:
+                _try_reconnect(args[0])
+        raise exceptions.ReConnectionError("Can't reconnect to LDAP")
+    return newfunc
+
 
 class Directory(object):
     """Ldap connection object
@@ -73,6 +108,30 @@ class Directory(object):
         schemadict = self._ldapconn.read_subschemasubentry_s(schemadn)
         self._schema = schema.SubSchema(schemadict)
 
+    def get_basedn(self):
+        """Returns basedn for connected resource
+        """
+        return self._resource.basedn
+
+    def _connect(self):
+        """Connect to LDAP server, does the accual work
+        """
+        try:
+            self._ldapconn = ldap.initialize(self._resource.server)
+            self._ldapconn.protocol_version = ldap.VERSION3
+            self._start_tls()
+            self._bind()
+            self._read_schema()
+        except ldap.SERVER_DOWN, e:
+            raise exceptions.ServerDown(
+                "LDAP server is down: %s" % exceptions.desc(e))
+        except ldap.TIMEOUT, e:
+            raise exceptions.ServerTimeout(
+                "LDAP server timeout: %s" % exceptions.desc(e))
+        except ldap.CONNECT_ERROR, e:
+            raise exceptions.ConnectionError(
+                "Connection error: %s" % exceptions.desc(e))
+
     def isconnected(self):
         """Check if we are connected to ldap server
         """
@@ -82,11 +141,7 @@ class Directory(object):
         """Connect to LDAP server
         """
         self._resource = res
-        self._ldapconn = ldap.initialize(self._resource.server)
-        self._ldapconn.protocol_version = ldap.VERSION3
-        self._start_tls()
-        self._bind()
-        self._read_schema()
+        self._connect()
 
     def disconnect(self):
         """Disconnect from LDAP server
@@ -94,6 +149,7 @@ class Directory(object):
         self._ldapconn.unbind_s()
         self._connected = False
 
+    @reconnect
     def search(self, model, basedn=None, recursive=True, search_filter=None):
         """Search for all objects matching model and return list of model
         instances
@@ -147,6 +203,7 @@ class Directory(object):
         """
         return self.get_attrs(ldap_dn, [ldap_attr]).get(ldap_attr, None)
 
+    @reconnect
     def get_attrs(self, ldap_dn, ldap_attrs):
         """Get multiple attributes for object ldap_dn from LDAP
         """
@@ -182,21 +239,25 @@ class Directory(object):
             modlist.append((ldap.MOD_REPLACE, attr, values))
         self._ldapconn.modify_s(ldap_dn, modlist)
 
+    @reconnect
     def passwd(self, ldap_dn, oldpass, newpass):
         """Change password for object ldap_dn in LDAP
         """
         self._ldapconn.passwd_s(ldap_dn, oldpass, newpass)
 
+    @reconnect
     def rename(self, old_dn, new_rdn, parent=None):
         """Rename object
         """
         self._ldapconn.rename_s(old_dn, new_rdn, newsuperior=parent)
 
+    @reconnect
     def delete(self, ldap_dn):
         """Delete object ldap_dn from LDAP
         """
         self._ldapconn.delete_s(ldap_dn)
 
+    @reconnect
     def add_object(self, ldap_dn, attrs):
         """Add new object to LDAP
         """

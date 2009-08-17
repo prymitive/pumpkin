@@ -40,13 +40,14 @@ class QA(Model):
         """Simple fset function for 'custom_func' field
         """
         self.custom_func_value = value
+        #FIXME unsafe
 
 qa = QA(LDAP_CONN, 'cn=Max Blank,ou=users,dc=company,dc=com')
 
 class Test(unittest.TestCase):
     """This class runs all tests
     """
-    
+
     def test_object_class_read(self):
         """Test reading full object_class
         """

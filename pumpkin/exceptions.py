@@ -23,3 +23,21 @@ class ModelNotMatched(_Error):
 class InvalidModel(_Error):
     """Model definition error
     """
+
+class ConnectionError(_Error):
+    """Undefined connection error
+    """
+
+class ServerDown(_Error):
+    """LDAP server is down
+    """
+
+class ReConnectionError(_Error):
+    """Can't reconnect to LDAP
+    """
+
+
+def desc(err):
+    """Return ldap exception description if present
+    """
+    return err[0].get("desc", "No description")
