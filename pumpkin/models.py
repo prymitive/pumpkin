@@ -98,3 +98,12 @@ class GroupOfNames(Model):
 
     name = StringField('cn')
     member = StringListField('member')
+
+
+class Unit(Model):
+    """Model for grouping other objects
+    """
+    _object_class_ = 'organizationalUnit'
+    _rdn_ = 'name'
+
+    name = StringField('ou')
