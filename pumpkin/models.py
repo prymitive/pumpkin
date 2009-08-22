@@ -54,7 +54,7 @@ class PosixGroup(Model):
         IntegerField.fset(IntegerField('gidNumber'), self, value) #FIXME ?!
         if self.members:
             for uid in self.members:
-                member = self._directory.get(
+                member = self.directory.get(
                     PosixUser,
                     search_filter=eq(PosixUser.uid, uid)
                 )

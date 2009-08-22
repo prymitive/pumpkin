@@ -176,7 +176,7 @@ class Directory(object):
             basedn,
             scope,
             final_filter,
-            attrlist=model.ldap_attributes()
+            attrlist=model.ldap_attributes(lazy=False)
         )
 
         ret = ObjectList()

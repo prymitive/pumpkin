@@ -146,10 +146,17 @@ class Model(object):
         return ret
 
     @classmethod
-    def ldap_attributes(cls):
+    def ldap_attributes(cls, lazy=True):
         """Get list of ldap attributes used by model
         """
-        return [ref.attr for ref in cls._get_fields().values()]
+        if lazy:
+            return [ref.attr for ref in cls._get_fields().values()]
+        else:
+            ret = []
+            for field in cls._get_fields().values():
+                if not field.lazy:
+                    ret.append(field.attr)
+            return ret
 
     def _object_class_fget(self):
         """Custom fget for getting objectClass, for new object it will return
@@ -173,8 +180,8 @@ class Model(object):
         @param directory: LDAP directory instance used for lookups
         @param dn: LDAP object distinguished name
         @param attrs: dict with already fetch attributes, used when creating
-        model instance from LDAP search, must contain all attributes, missing
-        attributes will be set to None
+        model instance from LDAP search, must contain all non-lazy attributes,
+        missing non-lazy attributes will be set to None
         """
         # can't use attrs kwarg because all model instances will use same reference
         self._storage = {}
@@ -183,7 +190,8 @@ class Model(object):
         if attrs != {}:
             for instance in self._get_fields().values():
                 if not self._isstored(instance.attr):
-                    self._store_attr(instance.attr, None)
+                    if not instance.lazy:
+                        self._store_attr(instance.attr, None)
 
         if dn:
             if isinstance(dn, unicode):
@@ -198,7 +206,7 @@ class Model(object):
         # used (when creating new object) to store object parent dn
         self._parent = None
 
-        self._directory = directory
+        self.directory = directory
 
         # list of affected objects
         self._affected = []
@@ -217,7 +225,7 @@ class Model(object):
     def _validate_schema(self):
         """Checks if all model fields are present in schema
         """
-        (must, may) = self._directory.get_schema_attrs(self.__class__)
+        (must, may) = self.directory.get_schema_attrs(self.__class__)
 
         for (field, instance) in self._get_fields().items():
              if instance.attr not in must + may:
@@ -278,7 +286,7 @@ object classes: %s, all available attrs: %s""" % (
             return None
         else:
             # if object got renamed we must keep searching using old dn until save()
-            value = self._directory.get_attr(self._ldap_dn(), attr)
+            value = self.directory.get_attr(self._ldap_dn(), attr)
             self._store_attr(attr, value)
             return value
 
@@ -357,7 +365,7 @@ object classes: %s, all available attrs: %s""" % (
                     ldap_attrs.remove(instance.attr)
 
         if ldap_attrs != []:
-            for (attr, value) in self._directory.get_attrs(self._ldap_dn(), ldap_attrs).items():
+            for (attr, value) in self.directory.get_attrs(self._ldap_dn(), ldap_attrs).items():
                 self._store_attr(attr, value)
 
     def isnew(self):
@@ -382,7 +390,7 @@ object classes: %s, all available attrs: %s""" % (
         """Check if all attributes required by schema are set
         """
         ret = []
-        (must, may) = self._directory.get_schema_attrs(self.__class__)
+        (must, may) = self.directory.get_schema_attrs(self.__class__)
         for (name, instance) in self._get_fields().items():
             for attr in must:
                 if instance.attr == attr:
@@ -401,19 +409,19 @@ object classes: %s, all available attrs: %s""" % (
 
         record = self.get_attributes(all=False)
         if self.isnew():
-            self._directory.add_object(self.dn, record)
+            self.directory.add_object(self.dn, record)
             self._empty = False
         else:
 
             if self._olddn:
-                self._directory.rename(
+                self.directory.rename(
                     self._olddn,
                     self._generate_rdn(),
                     parent = self._parent
                 )
             self._olddn = None
 
-            self._directory.set_attrs(self.dn, record)
+            self.directory.set_attrs(self.dn, record)
 
         # call save() on all affected instances
         for ref in self._affected:
@@ -426,7 +434,7 @@ object classes: %s, all available attrs: %s""" % (
         if self.isnew():
             raise Exception, "Can't delete empty object"
         else:
-            self._directory.delete(self.dn)
+            self.directory.delete(self.dn)
 
     def set_parent(self, parent_dn):
         """Set parrent object dn, required when creating new object, can also

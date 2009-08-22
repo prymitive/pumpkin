@@ -14,15 +14,15 @@ def pickle_object(obj):
     """Returns pickled str, note that Directory reference will be set to None
     in pickled object
     """
-    dir = obj._directory
-    obj._directory = None
+    dir = obj.directory
+    obj.directory = None
     ret = pickle.dumps(obj)
-    obj._directory = dir
+    obj.directory = dir
     return ret
 
 def unpickle_object(obj, directory):
     """Unpicke object
     """
     ret = pickle.loads(obj)
-    ret._directory = directory
+    ret.directory = directory
     return ret
