@@ -443,6 +443,8 @@ object classes: %s, all available attrs: %s""" % (
             raise Exception, "Can't delete empty object"
         else:
             self.directory.delete(self.dn)
+            self._empty = True
+            self._dn = None
 
     def set_parent(self, parent_dn):
         """Set parrent object dn, required when creating new object, can also

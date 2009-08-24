@@ -202,8 +202,29 @@ class Test(unittest.TestCase):
         self.assertEqual(qa.bool, True)
 
     def test_rdn(self):
+        """Test generating new rdn string
+        """
         print('New rdn: %s' % qa._generate_rdn())
         self.assertEqual(
             qa._generate_rdn(),
             'mail=max@blank.com+mail=max.blank@blank.com+cn=Max Blank+uid=max.blank'
         )
+
+    def test_delete(self):
+        """Test object deletion
+        """
+        self.pg = PosixGroup(LDAP_CONN)
+        self.pg.name = u'TestDelete'
+        self.pg.gid = 9351
+        self.pg.members = [23, 32]
+        self.pg.set_parent('ou=groups,dc=company,dc=com')
+        self.pg.save()
+        self.pg.delete()
+        self.assertEqual(self.pg.isnew(), True)
+        self.assertEqual(
+            self.pg.dn, u'cn=TestDelete,ou=groups,dc=company,dc=com')
+        self.pg.set_parent(u'dc=company,dc=com')
+        self.pg.name = u'TestDelete2'
+        self.pg.save()
+        self.assertEqual(self.pg.dn, u'cn=TestDelete2,dc=company,dc=com')
+        self.pg.delete()
