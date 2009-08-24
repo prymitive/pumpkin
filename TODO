@@ -21,8 +21,6 @@
 
 # wyjątki zrobić
 
-# _rdn_ -> list a nie str
-
 # delete()
 # jak skasujemy obiekt z LDAP'a to trzeba zadbać żeby instancja była oznaczona
 # jako _empty i _dn musi być wyczyszczony, czyli po delete() ma zadziałać:
@@ -35,8 +33,6 @@
 # ModelField i ModelListField - przechowuje dn'y innych obiektów, zwraca
 # instancje model z podanej listy, tylko co ma zwracać jak dn wskazuje na obiekt
 # który nie istnieje
-
-# @reconnect
 
 # rekursywny delete?
 

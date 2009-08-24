@@ -320,11 +320,19 @@ object classes: %s, all available attrs: %s""" % (
         ret = ''
         for (name, instance) in self._get_fields().items():
             if name in self.rdn_fields():
-                rdn_part = '%s=%s' % (instance.attr, getattr(self, name))
-                if ret != '':
-                    ret = '+'.join(ret, rdn_part)
+                # attribute can hold a list of values so we always make it a list
+                if isinstance(getattr(self, name), list):
+                    values = getattr(self, name)
                 else:
-                    ret = rdn_part
+                    values = [getattr(self, name)]
+
+                # for each attribute value we create rdn part and append it
+                for value in values:
+                    rdn_part = '%s=%s' % (instance.attr, value)
+                    if ret != '':
+                        ret = '%s+%s' % (ret, rdn_part)
+                    else:
+                        ret = rdn_part
         return ret
 
     def get_attributes(self, all=True):

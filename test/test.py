@@ -18,7 +18,7 @@ class QA(Model):
     """Testing model
     """
     _object_class_ = ['posixAccount', 'inetOrgPerson']
-    _rdn_ = 'string'
+    _rdn_ = ['string', 'uid', 'string_list']
     uid = StringField('uid')
     string = StringField('cn')
     string_list = StringListField('mail')
@@ -42,7 +42,9 @@ class QA(Model):
         self.custom_func_value = value
         #FIXME unsafe
 
+
 qa = QA(LDAP_CONN, 'cn=Max Blank,ou=users,dc=company,dc=com')
+
 
 class Test(unittest.TestCase):
     """This class runs all tests
@@ -198,3 +200,10 @@ class Test(unittest.TestCase):
         self.assertEqual(qa.bool, False)
         qa.bool = True
         self.assertEqual(qa.bool, True)
+
+    def test_rdn(self):
+        print('New rdn: %s' % qa._generate_rdn())
+        self.assertEqual(
+            qa._generate_rdn(),
+            'mail=max@blank.com+mail=max.blank@blank.com+cn=Max Blank+uid=max.blank'
+        )
