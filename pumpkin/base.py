@@ -477,3 +477,12 @@ object classes: %s, all available attrs: %s""" % (
                     "Object with dn: %s is already affected!" % ref.dn)
 
         self._affected.append(ref)
+
+    def passwd(self, oldpass, newpass):
+        """Change LDAP password
+        """
+        #TODO add a check if current object has password field or implement PasswordField
+        if self._olddn:
+            self.directory(self._olddn, oldpass, newpass)
+        else:
+            self.directory.passwd(self.dn, oldpass, newpass)

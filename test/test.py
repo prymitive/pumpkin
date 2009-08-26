@@ -228,3 +228,9 @@ class Test(unittest.TestCase):
         self.pg.save()
         self.assertEqual(self.pg.dn, u'cn=TestDelete2,dc=company,dc=com')
         self.pg.delete()
+
+    def test_passwd(self):
+        """Test changing password
+        """
+        qa.passwd('pass123', '123ssap')
+        qa.passwd('123ssap', 'pass123')
