@@ -32,3 +32,10 @@
 # recursywny rename?
 
 # catchall model? _object_class_ = '*'
+
+# zrobić passwd na Model
+
+# wywalić affected a zamiast tego zrobić hook'i
+# w hook'ach można sobie zrobić searcha na starej wartości i zmienić co trzeba
+# ale nie ma teraz skąd brać starej wartości więc w _storage trzeba też trzymać
+# starą wartość albo dodać _storage_org czy coś w ten deseń
