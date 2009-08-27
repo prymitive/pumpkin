@@ -131,6 +131,9 @@ class Directory(object):
         except ldap.CONNECT_ERROR, e:
             raise exceptions.ConnectionError(
                 "Connection error: %s" % exceptions.desc(e))
+        except ldap.INVALID_CREDENTIALS, e:
+            raise exceptions.InvalidAuth(
+                "Username and/or password is incorrect: %s" % exceptions.desc(e))
 
     def isconnected(self):
         """Check if we are connected to ldap server

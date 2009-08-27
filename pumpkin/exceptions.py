@@ -36,6 +36,10 @@ class ReConnectionError(_Error):
     """Can't reconnect to LDAP
     """
 
+class InvalidAuth(_Error):
+    """Invalid username and/or password
+    """
+
 
 def desc(err):
     """Return ldap exception description if present
