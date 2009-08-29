@@ -7,45 +7,84 @@ Created on 2009-05-24
 '''
 
 
+import logging
 from functools import wraps
 
 import ldap
 from ldap import sasl, schema
 
+from debug import PUMPKIN_LOGLEVEL
 import resource
 import filters
 import exceptions
 from objectlist import ObjectList
 
 
-def _try_reconnect(directory):
-    """Try to connect to LDAP
-    """
-    try:
-        directory.disconnect()
-        directory._connect()
-    except:
-        pass
+logging.basicConfig(level=PUMPKIN_LOGLEVEL)
+log = logging.getLogger(__name__)
 
-def reconnect(func):
-    """Ldap reconnection wrapper
+
+def ldap_exception_handler(func):
+    """LDAP operation wrapper, takes care of exception handling.
     """
     @wraps(func)
-    def newfunc(*args, **kwargs):
+    def handler(*args, **kwargs):
+        log.debug("LDAP exception handler: %s" % func)
+        try:
+            return func(*args, **kwargs)
+        except ldap.SERVER_DOWN, e:
+            raise exceptions.ServerDown(exceptions.desc(e))
+        except ldap.TIMEOUT, e:
+            raise exceptions.Timeout(exceptions.desc(e))
+        except ldap.CONNECT_ERROR, e:
+            raise exceptions.ConnectionError(exceptions.desc(e))
+        except ldap.INVALID_CREDENTIALS, e:
+            raise exceptions.InvalidAuth(
+                "Username and/or password is incorrect: %s" % exceptions.desc(e))
+        except ldap.OBJECT_CLASS_VIOLATION, e:
+            raise exceptions.SchemaViolation(
+                "Model breaks object class rules: %s" % exceptions.desc(e))
+    return handler
+
+
+def ldap_reconnect_handler(func):
+    """LDAP reconnect wrapper, takes care of reconnections on broken connection.
+    """
+    @wraps(func)
+    def handler(*args, **kwargs):
+        """This handler takes care of exception handling.
+        """
+        log.debug("LDAP reconnect handler: %s" % func)
+        try:
+            return func(*args, **kwargs)
+        except exceptions.ServerDown, e:
+            log.error("LDAP server is down: %s" % e)
+            return reconnect(*args, **kwargs)
+        except exceptions.Timeout, e:
+            log.error("Timeout: %s" % e)
+            return reconnect(*args, **kwargs)
+        except exceptions.ConnectionError, e:
+            log.error("Connection error: %s" % e)
+            return reconnect(*args, **kwargs)
+
+    def reconnect(*args, **kwargs):
+        """This handler takes care of recconeting to LDAP server if connection
+        is lost.
+        """
+        if args[0].isconnected():
+            args[0]._connected = False
         for cnt in range(10):
+            log.warning("Reconnecting to LDAP server '%s' (%d)" % (
+                args[0]._resource.server, cnt))
             try:
-                if not args[0].isconnected():
-                    _try_reconnect(args[0])
+                args[0]._connect()
                 return func(*args, **kwargs)
-            except ldap.SERVER_DOWN, e:
-                #TODO print warnings
-                _try_reconnect(args[0])
-            except ldap.TIMEOUT, e:
-                _try_reconnect(args[0])
-            except ldap.CONNECT_ERROR, e:
-                _try_reconnect(args[0])
-        raise exceptions.ReConnectionError("Can't reconnect to LDAP")
-    return newfunc
+            except:
+                pass
+        else:
+            raise exceptions.ReConnectionError("Can't reconnect to LDAP")
+
+    return handler
 
 
 class Directory(object):
@@ -68,12 +107,16 @@ class Directory(object):
             if ldap.TLS_AVAIL:
                 self._ldapconn.start_tls_s()
             else:
-                raise Exception('python-ldap is built without tls support')
+                raise exceptions.ResourceError(
+                    'python-ldap is built without tls support')
 
     def _bind(self):
         """Bind to server
         """
         if self._resource.auth_method == resource.AUTH_SIMPLE:
+            log.debug(
+                "Performing SIMPLE BIND operation to '%s' as '%s'" % (
+                    self._resource.server, self._resource.login))
             self._ldapconn.simple_bind_s(
                 self._resource.login,
                 self._resource.password
@@ -91,12 +134,14 @@ class Directory(object):
                         self._resource.password
                     )
                 else:
-                    raise Exception('Unknown SASL method')
+                    raise exceptions.ResourceError('Unknown SASL method')
+                log.debug(
+                    "Performing SIMPLE BIND operation to '%s'" % self._resource.server)
                 self._ldapconn.sasl_interactive_bind_s("", auth_tokens)
             else:
-                raise Exception('python-ldap is built without sasl support')
+                raise exceptions.ResourceError('python-ldap is built without sasl support')
         else:
-            raise Exception("Unknown authorization method")
+            raise exceptions.ResourceError("Unknown authorization method")
 
         self._connected = True
 
@@ -104,6 +149,7 @@ class Directory(object):
     def _read_schema(self):
         """Read schema from server
         """
+        log.debug("Reding server schema on '%s'" % self._resource.server)
         schemadn = self._ldapconn.search_subschemasubentry_s()
         schemadict = self._ldapconn.read_subschemasubentry_s(schemadn)
         self._schema = schema.SubSchema(schemadict)
@@ -113,27 +159,16 @@ class Directory(object):
         """
         return self._resource.basedn
 
+    @ldap_exception_handler
     def _connect(self):
-        """Connect to LDAP server, does the accual work
+        """Connect to LDAP server, does the actual work
         """
-        try:
-            self._ldapconn = ldap.initialize(self._resource.server)
-            self._ldapconn.protocol_version = ldap.VERSION3
-            self._start_tls()
-            self._bind()
-            self._read_schema()
-        except ldap.SERVER_DOWN, e:
-            raise exceptions.ServerDown(
-                "LDAP server is down: %s" % exceptions.desc(e))
-        except ldap.TIMEOUT, e:
-            raise exceptions.ServerTimeout(
-                "LDAP server timeout: %s" % exceptions.desc(e))
-        except ldap.CONNECT_ERROR, e:
-            raise exceptions.ConnectionError(
-                "Connection error: %s" % exceptions.desc(e))
-        except ldap.INVALID_CREDENTIALS, e:
-            raise exceptions.InvalidAuth(
-                "Username and/or password is incorrect: %s" % exceptions.desc(e))
+        log.debug("Connecting to server '%s'" % self._resource.server)
+        self._ldapconn = ldap.initialize(self._resource.server)
+        self._ldapconn.protocol_version = ldap.VERSION3
+        self._start_tls()
+        self._bind()
+        self._read_schema()
 
     def isconnected(self):
         """Check if we are connected to ldap server
@@ -149,10 +184,12 @@ class Directory(object):
     def disconnect(self):
         """Disconnect from LDAP server
         """
+        log.debug("Disconnecting from server '%s'" % self._resource.server)
         self._ldapconn.unbind_s()
         self._connected = False
 
-    @reconnect
+    @ldap_reconnect_handler
+    @ldap_exception_handler
     def search(self, model, basedn=None, recursive=True, search_filter=None):
         """Search for all objects matching model and return list of model
         instances
@@ -206,7 +243,8 @@ class Directory(object):
         """
         return self.get_attrs(ldap_dn, [ldap_attr]).get(ldap_attr, None)
 
-    @reconnect
+    @ldap_reconnect_handler
+    @ldap_exception_handler
     def get_attrs(self, ldap_dn, ldap_attrs):
         """Get multiple attributes for object ldap_dn from LDAP
         """
@@ -234,6 +272,8 @@ class Directory(object):
         """
         self.set_attrs(ldap_dn, {ldap_attr:value})
 
+    @ldap_reconnect_handler
+    @ldap_exception_handler
     def set_attrs(self, ldap_dn, ldap_attrs):
         """Set multiple attributes for object ldap_dn in LDAP
         """
@@ -242,25 +282,29 @@ class Directory(object):
             modlist.append((ldap.MOD_REPLACE, attr, values))
         self._ldapconn.modify_s(ldap_dn, modlist)
 
-    @reconnect
+    @ldap_reconnect_handler
+    @ldap_exception_handler
     def passwd(self, ldap_dn, oldpass, newpass):
         """Change password for object ldap_dn in LDAP
         """
         self._ldapconn.passwd_s(ldap_dn, oldpass, newpass)
 
-    @reconnect
+    @ldap_reconnect_handler
+    @ldap_exception_handler
     def rename(self, old_dn, new_rdn, parent=None):
         """Rename object
         """
         self._ldapconn.rename_s(old_dn, new_rdn, newsuperior=parent)
 
-    @reconnect
+    @ldap_reconnect_handler
+    @ldap_exception_handler
     def delete(self, ldap_dn):
         """Delete object ldap_dn from LDAP
         """
         self._ldapconn.delete_s(ldap_dn)
 
-    @reconnect
+    @ldap_reconnect_handler
+    @ldap_exception_handler
     def add_object(self, ldap_dn, attrs):
         """Add new object to LDAP
         """

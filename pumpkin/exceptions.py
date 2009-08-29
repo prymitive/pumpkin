@@ -6,42 +6,60 @@ Created on 2009-08-11
 @license: GPLv3: http://www.gnu.org/licenses/gpl-3.0.txt
 '''
 
-class _Error(Exception):
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return repr(self.value)
 
-class SchemaValidationError(_Error):
+class SchemaValidationError(Exception):
     """Model does not match current schema
     """
+    pass
 
-class ModelNotMatched(_Error):
+class ModelNotMatched(Exception):
     """Object does not match model
     """
+    pass
 
-class InvalidModel(_Error):
+class InvalidModel(Exception):
     """Model definition error
     """
+    pass
 
-class ConnectionError(_Error):
+class ConnectionError(Exception):
     """Undefined connection error
     """
+    pass
 
-class ServerDown(_Error):
+class Timeout(Exception):
+    """Operation timeout
+    """
+
+class ServerDown(Exception):
     """LDAP server is down
     """
+    pass
 
-class ReConnectionError(_Error):
+class ReConnectionError(Exception):
     """Can't reconnect to LDAP
     """
+    pass
 
-class InvalidAuth(_Error):
+class InvalidAuth(Exception):
     """Invalid username and/or password
     """
+    pass
+
+class SchemaViolation(Exception):
+    """Model breaks object class rules
+    """
+    pass
+
+class ResourceError(Exception):
+    """Invalid settings passed to LDAP resource
+    """
+    pass
 
 
 def desc(err):
     """Return ldap exception description if present
     """
-    return err[0].get("desc", "No description")
+    desc = err[0].get("desc", "n/a")
+    info = err[0].get("info", "n/a")
+    return "error description: '%s', error details: '%s'" % (desc, info)
