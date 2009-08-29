@@ -225,16 +225,18 @@ class Model(object):
     def _validate_schema(self):
         """Checks if all model fields are present in schema
         """
-        (must, may) = self.directory.get_schema_attrs(self.__class__)
+        # skip checks if we got catch all model type (like models.DN)
+        if self._object_class_ != [] and self._rdn_ != []:
+            (must, may) = self.directory.get_schema_attrs(self.__class__)
 
-        for (field, instance) in self._get_fields().items():
-             if instance.attr not in must + may:
-                 raise exceptions.SchemaValidationError(
+            for (field, instance) in self._get_fields().items():
+                 if instance.attr not in must + may:
+                     raise exceptions.SchemaValidationError(
 """Can't store '%s' field with LDAP attribute '%s' using current schema and \
 object classes: %s, all available attrs: %s""" % (
-                    field, instance.attr, self.private_classes(), must + may
+                        field, instance.attr, self.private_classes(), must + may
+                        )
                     )
-                )
 
     def _validate_object_class(self):
         """Checks if passed object dn matches our model. To do so we check if
