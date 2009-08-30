@@ -238,8 +238,6 @@ class _Model(object):
 
         # used when changing object dn
         self._olddn = None
-        # used (when creating new object) to store object parent dn
-        self._parent = None
 
         self.directory = directory
 
@@ -248,8 +246,10 @@ class _Model(object):
 
         if dn == None:
             self._empty = True
+            self._parent = self.directory.get_basedn()
         else:
             self._empty = False
+            self._parent = None
 
             self.update(missing_only=True)
             self._validate_object_class()

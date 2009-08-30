@@ -15,5 +15,3 @@
 # który nie istnieje
 
 # recursywny rename?
-
-# _parent domyślnie ma być directory.get_basedn() dla nowych obiektów
