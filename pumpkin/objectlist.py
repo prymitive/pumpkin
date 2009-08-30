@@ -7,7 +7,7 @@ Created on 2009-07-12
 '''
 
 
-from serialize import pickle_object
+from pumpkin.serialize import pickle_object
 
 
 class ObjectList(list):

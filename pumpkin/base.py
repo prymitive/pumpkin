@@ -10,9 +10,9 @@ Created on 2009-06-11
 import logging
 from functools import wraps, partial
 
-from debug import PUMPKIN_LOGLEVEL
-from fields import Field, StringListField
-import exceptions
+from pumpkin.debug import PUMPKIN_LOGLEVEL
+from pumpkin.fields import Field, StringListField
+from pumpkin import exceptions
 
 
 logging.basicConfig(level=PUMPKIN_LOGLEVEL)
@@ -217,7 +217,8 @@ class _Model(object):
         model instance from LDAP search, must contain all non-lazy attributes,
         missing non-lazy attributes will be set to None
         """
-        # can't use attrs kwarg because all model instances will use same reference
+        # can't use attrs kwarg because all model instances will use same
+        # reference
         self._storage = {}
         for (attr, value) in attrs.items():
             self._store_attr(attr, value)
@@ -261,8 +262,8 @@ class _Model(object):
             (must, may) = self.directory.get_schema_attrs(self.__class__)
 
             for (field, instance) in self._get_fields().items():
-                 if instance.attr not in must + may:
-                     raise exceptions.SchemaValidationError(
+                if instance.attr not in must + may:
+                    raise exceptions.SchemaValidationError(
 """Can't store '%s' field with LDAP attribute '%s' using current schema and \
 object classes: %s, all available attrs: %s""" % (
                         field, instance.attr, self.private_classes(), must + may
@@ -276,7 +277,10 @@ object classes: %s, all available attrs: %s""" % (
         for oc in self.private_classes():
             if oc not in self.object_class:
                 raise exceptions.ModelNotMatched(
-                    "Object with dn %s does not have %s object class" % (self.dn, oc)
+                    "Object with dn %s does not have %s object class" % (
+                        self.dn,
+                        oc
+                    )
                 )
 
     def _validate_rdn_fields(self):
@@ -284,7 +288,8 @@ object classes: %s, all available attrs: %s""" % (
         """
         for name in self.rdn_fields():
             if name not in self._get_fields():
-                raise exceptions.InvalidModel("RDN field '%s' is missing from model" % name)
+                raise exceptions.InvalidModel(
+                    "RDN field '%s' is missing from model" % name)
 
     def _isstored(self, attr):
         """Checks if given attribute is stored in local instance storage
@@ -318,7 +323,8 @@ object classes: %s, all available attrs: %s""" % (
         elif self.isnew():
             return None
         else:
-            # if object got renamed we must keep searching using old dn until save()
+            # if object got renamed we must keep searching using old dn until
+            # save()
             value = self.directory.get_attr(self._ldap_dn(), attr)
             self._store_attr(attr, value)
             return value
@@ -353,7 +359,8 @@ object classes: %s, all available attrs: %s""" % (
         ret = ''
         for (name, instance) in self._get_fields().items():
             if name in self.rdn_fields():
-                # attribute can hold a list of values so we always make it a list
+                # _rdn_ attribute can hold a list of values so we always make
+                #it a list
                 if isinstance(getattr(self, name), list):
                     values = getattr(self, name)
                 else:
@@ -407,7 +414,8 @@ object classes: %s, all available attrs: %s""" % (
                     ldap_attrs.remove(instance.attr)
 
         if ldap_attrs != []:
-            for (attr, value) in self.directory.get_attrs(self._ldap_dn(), ldap_attrs).items():
+            for (attr, value) in self.directory.get_attrs(
+                self._ldap_dn(), ldap_attrs).items():
                 self._store_attr(attr, value)
 
     def isnew(self):
@@ -507,7 +515,7 @@ object classes: %s, all available attrs: %s""" % (
     def passwd(self, oldpass, newpass):
         """Change LDAP password
         """
-        #TODO add a check if current object has password field or implement PasswordField
+        #TODO add check if object has password field or implement PasswordField
         if self._olddn:
             self.directory(self._olddn, oldpass, newpass)
         else:

@@ -100,7 +100,8 @@ class Field(object):
             self.fdel(instance)
         else:
             value = self.validate(value)
-            instance._set_attr(self.attr, self.encode2str(value, instance=instance))
+            instance._set_attr(self.attr, self.encode2str(
+                value, instance=instance))
 
     def fdel(self, instance):
         """Delete attribute using model instance

@@ -13,10 +13,10 @@ from functools import wraps
 import ldap
 from ldap import sasl, schema
 
-from debug import PUMPKIN_LOGLEVEL
-import resource
-import filters
-import exceptions
+from pumpkin.debug import PUMPKIN_LOGLEVEL
+from pumpkin import resource
+from pumpkin import filters
+from pumpkin import exceptions
 from objectlist import ObjectList
 
 
@@ -137,11 +137,12 @@ class Directory(object):
                     )
                 else:
                     raise exceptions.ResourceError('Unknown SASL method')
-                log.debug(
-                    "Performing SIMPLE BIND operation to '%s'" % self._resource.server)
+                log.debug("Performing SIMPLE BIND operation to '%s'" %
+                    self._resource.server)
                 self._ldapconn.sasl_interactive_bind_s("", auth_tokens)
             else:
-                raise exceptions.ResourceError('python-ldap is built without sasl support')
+                raise exceptions.ResourceError(
+                    'python-ldap is built without sasl support')
         else:
             raise exceptions.ResourceError("Unknown authorization method")
 
@@ -192,7 +193,8 @@ class Directory(object):
 
     @ldap_reconnect_handler
     @ldap_exception_handler
-    def search(self, model, basedn=None, recursive=True, search_filter=None, skip_basedn=False):
+    def search(self, model, basedn=None, recursive=True, search_filter=None,
+        skip_basedn=False):
         """Search for all objects matching model and return list of model
         instances
         """

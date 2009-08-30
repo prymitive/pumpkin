@@ -7,21 +7,21 @@ Created on 2009-06-07
 '''
 
 
-from base import Model
+from pumpkin.base import Model
 
-from fields import BinaryField
-from fields import IntegerField
-from fields import IntegerListField
-from fields import StringField
-from fields import StringListField
+from pumpkin.fields import BinaryField
+from pumpkin.fields import IntegerField
+from pumpkin.fields import IntegerListField
+from pumpkin.fields import StringField
+from pumpkin.fields import StringListField
 
-from filters import eq
+from pumpkin.filters import eq
 
 
 class PosixUser(Model):
     """posixAccount model
     """
-    _object_class_ = ['posixAccount','inetOrgPerson']
+    _object_class_ = ['posixAccount', 'inetOrgPerson']
     _rdn_ = 'login'
 
     login = StringField('uid')
@@ -68,7 +68,7 @@ class PosixGroup(Model):
             if not self.ismember(uid):
                 self.members += [uid]
         else:
-             self.members = [uid]
+            self.members = [uid]
 
     def remove_member(self, uid):
         """Removes given user uid from members list

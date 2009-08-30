@@ -68,6 +68,6 @@ class ObjectNotFound(Exception):
 def desc(err):
     """Return ldap exception description if present
     """
-    desc = err[0].get("desc", "n/a")
+    description = err[0].get("desc", "n/a")
     info = err[0].get("info", "n/a")
-    return "error description: '%s', error details: '%s'" % (desc, info)
+    return "error description: '%s', error details: '%s'" % (description, info)
