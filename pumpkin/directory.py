@@ -168,7 +168,12 @@ class Directory(object):
         """
         log.debug("Connecting to server '%s'" % self._resource.server)
         self._ldapconn = ldap.initialize(self._resource.server)
+
         self._ldapconn.protocol_version = ldap.VERSION3
+        self._ldapconn.set_option(ldap.OPT_TIMEOUT, self._resource.timeout)
+        self._ldapconn.set_option(
+            ldap.OPT_NETWORK_TIMEOUT, self._resource.timeout)
+
         self._start_tls()
         self._bind()
         self._read_schema()
