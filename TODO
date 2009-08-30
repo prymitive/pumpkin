@@ -1,11 +1,6 @@
-# custom_search - jeśli robić to co wtedy zwracać?
-
 # Debug
 
 # Statystyki
-
-#  zrobić storage do wszystkich modeli, tak żeby 30 importów nie alokowało
-#      30 pełnych fieldów a ino 1
 
 # PasswordField - jak?
 # b) StringField + metoda password() na modelu która działa tylko jak jest
@@ -21,7 +16,4 @@
 
 # recursywny rename?
 
-# wywalić affected a zamiast tego zrobić hook'i
-# w hook'ach można sobie zrobić searcha na starej wartości i zmienić co trzeba
-# ale nie ma teraz skąd brać starej wartości więc w _storage trzeba też trzymać
-# starą wartość albo dodać _storage_org czy coś w ten deseń
+# _parent domyślnie ma być directory.get_basedn() dla nowych obiektów

@@ -163,16 +163,16 @@ class Test(unittest.TestCase):
     def test_move(self):
         """Test moving object
         """
-        self.pg = LDAP_CONN.get(PosixGroup, search_filter=eq('gidNumber', 345))
+        self.pg = LDAP_CONN.get(PosixGroup, search_filter=eq('gidNumber', 3345))
         print('Old LDAP dn: %s' % self.pg.dn)
-        self.assertEqual(self.pg.dn, 'cn=nazwa,ou=groups,dc=company,dc=com')
+        self.assertEqual(self.pg.dn, 'cn=nazwa2,ou=groups,dc=company,dc=com')
         self.pg.set_parent('dc=company,dc=com')
         self.pg.save()
         print('New LDAP dn: %s' % self.pg.dn)
-        self.assertEqual(self.pg.dn, 'cn=nazwa,dc=company,dc=com')
+        self.assertEqual(self.pg.dn, 'cn=nazwa2,dc=company,dc=com')
         self.pg.set_parent('ou=groups,dc=company,dc=com')
         self.pg.save()
-        self.assertEqual(self.pg.dn, 'cn=nazwa,ou=groups,dc=company,dc=com')
+        self.assertEqual(self.pg.dn, 'cn=nazwa2,ou=groups,dc=company,dc=com')
 
     def test_affected(self):
         """Test saving with affected objects

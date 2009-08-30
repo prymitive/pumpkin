@@ -8,8 +8,7 @@ Created on 2009-06-11
 
 
 import logging
-
-from functools import partial
+from functools import wraps, partial
 
 from debug import PUMPKIN_LOGLEVEL
 from fields import Field, StringListField
@@ -18,6 +17,33 @@ import exceptions
 
 logging.basicConfig(level=PUMPKIN_LOGLEVEL)
 log = logging.getLogger(__name__)
+
+
+def run_hooks(func):
+    """Hooks decorator, it runs hooks for given method.
+    """
+    @wraps(func)
+    def hook(*args, **kwargs):
+        model = args[0]
+        pre_name = '_hook_pre_%s' % func.__name__
+        post_name = '_hook_post_%s' % func.__name__
+
+        # run pre hook if present
+        if getattr(model, pre_name, None) is not None:
+            log.debug("Running pre hook '%s' on '%s'" % (pre_name, model))
+            hook_call = getattr(model, pre_name)
+            hook_call()
+
+        # run real method
+        ret = func(*args, **kwargs)
+
+        # run post hook if present
+        if getattr(model, post_name, None) is not None:
+            log.debug("Running post hook '%s' on '%s'" % (post_name, model))
+            hook_call = getattr(model, post_name)
+            hook_call()
+        return ret
+    return hook
 
 
 class _model(type):
@@ -216,9 +242,6 @@ class _Model(object):
 
         self.directory = directory
 
-        # list of affected objects
-        self._affected = []
-
         self._validate_rdn_fields()
         self._validate_schema()
 
@@ -362,6 +385,7 @@ object classes: %s, all available attrs: %s""" % (
                 record[attr] = value
         return record
 
+    @run_hooks
     def update(self, missing_only=False, force=False):
         """Fetch all non-lazy fields from LDAP
         @param missing_only: fetch only attributes that are not present in local
@@ -416,6 +440,7 @@ object classes: %s, all available attrs: %s""" % (
                         ret.append(name)
         return ret
 
+    @run_hooks
     def save(self):
         """Save object into LDAP, if instance in new it will add object
         to LDAP, update self._rdn and mark it non-empty, if instance is
@@ -441,11 +466,7 @@ object classes: %s, all available attrs: %s""" % (
 
             self.directory.set_attrs(self.dn, record)
 
-        # call save() on all affected instances
-        for ref in self._affected:
-            ref.save()
-            self._affected.remove(ref)
-
+    @run_hooks
     def delete(self, recursive=False):
         """Delete object from LDAP
         """
@@ -482,18 +503,7 @@ object classes: %s, all available attrs: %s""" % (
         return locals()
     dn = property(**dn())
 
-    def affected(self, ref):
-        """Add new affected model instance to local list, when calling save()
-        on self instance we will also call save() on all instances from this
-        list
-        """
-        for item in self._affected:
-            if item.dn == ref.dn:
-                raise Exception(
-                    "Object with dn: %s is already affected!" % ref.dn)
-
-        self._affected.append(ref)
-
+    @run_hooks
     def passwd(self, oldpass, newpass):
         """Change LDAP password
         """
