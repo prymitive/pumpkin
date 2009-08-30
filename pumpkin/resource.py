@@ -31,6 +31,7 @@ class LDAPResource(object):
         self.password = None
         self.basedn = ''
         self.tls = False
+        self.timeout = -1
 
     def auth_method():
         doc = "Auth method, can be AUTH_SIMPLE or AUTH_SASL"

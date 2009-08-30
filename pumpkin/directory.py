@@ -216,11 +216,12 @@ class Directory(object):
         else:
             final_filter = model_filter
 
-        data = self._ldapconn.search_s(
+        data = self._ldapconn.search_ext_s(
             basedn,
             scope,
             final_filter,
-            attrlist=model.ldap_attributes(lazy=False)
+            attrlist=model.ldap_attributes(lazy=False),
+            timeout=self._resource.timeout,
         )
 
         ret = ObjectList()
@@ -254,10 +255,11 @@ class Directory(object):
     def get_attrs(self, ldap_dn, ldap_attrs):
         """Get multiple attributes for object ldap_dn from LDAP
         """
-        ldap_entry = self._ldapconn.search_s(
+        ldap_entry = self._ldapconn.search_ext_s(
             ldap_dn,
             ldap.SCOPE_BASE,
-            attrlist=ldap_attrs
+            attrlist=ldap_attrs,
+            timeout=self._resource.timeout,
         )
         if ldap_entry != []:
             if len(ldap_entry) > 1:
