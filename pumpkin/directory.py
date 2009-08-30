@@ -39,11 +39,13 @@ def ldap_exception_handler(func):
         except ldap.CONNECT_ERROR, e:
             raise exceptions.ConnectionError(exceptions.desc(e))
         except ldap.INVALID_CREDENTIALS, e:
-            raise exceptions.InvalidAuth(
-                "Username and/or password is incorrect: %s" % exceptions.desc(e))
+            raise exceptions.InvalidAuth(exceptions.desc(e))
         except ldap.OBJECT_CLASS_VIOLATION, e:
-            raise exceptions.SchemaViolation(
-                "Model breaks object class rules: %s" % exceptions.desc(e))
+            raise exceptions.SchemaViolation(exceptions.desc(e))
+        except ldap.NOT_ALLOWED_ON_NONLEAF, e:
+            raise exceptions.DeleteOnParent(exceptions.desc(e))
+        except ldap.NO_SUCH_OBJECT, e:
+            raise exceptions.ObjectNotFound(exceptions.desc(e))
     return handler
 
 
@@ -190,7 +192,7 @@ class Directory(object):
 
     @ldap_reconnect_handler
     @ldap_exception_handler
-    def search(self, model, basedn=None, recursive=True, search_filter=None):
+    def search(self, model, basedn=None, recursive=True, search_filter=None, skip_basedn=False):
         """Search for all objects matching model and return list of model
         instances
         """
@@ -221,6 +223,8 @@ class Directory(object):
 
         ret = ObjectList()
         for (dn, attrs) in data:
+            if skip_basedn and dn == basedn:
+                continue
             ret.append(model(self, dn=dn, attrs=attrs))
 
         return ret

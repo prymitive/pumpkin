@@ -18,20 +18,6 @@ from fields import StringListField
 from filters import eq
 
 
-class DN(Model):
-    """DN is 'catch all' model type, it has only dn field and is used for 
-    example to remove any object from LDAP without knowing it's model type.
-    """
-    _object_class_ = []
-    _rdn_ = []
-
-    def save(self):
-        """Raise exception on save as DN model is not intendet for modifying
-        any objects data.
-        """
-        raise Exception("Can't save DN model.")
-
-
 class PosixUser(Model):
     """posixAccount model
     """

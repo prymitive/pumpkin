@@ -56,6 +56,14 @@ class ResourceError(Exception):
     """
     pass
 
+class DeleteOnParent(Exception):
+    """Can't remove object with children
+    """
+
+class ObjectNotFound(Exception):
+    """No object with given dn found
+    """
+
 
 def desc(err):
     """Return ldap exception description if present

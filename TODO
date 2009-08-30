@@ -13,21 +13,11 @@
 #    do tego kwargsy enc=(plain,md5,sha1) itd., encode2str zwróci str zakodowanego
 #    przy użyciu odpowiedniej metody, sprawdzić czy nasze md5 == ldap md5
 
-# DNField - jak zrobić?
-# a) po prostu str
-# b) instancja modelu - ale jakiego modelu? nie wiadomo w momencie definicji
-#    modelu który ma zawierać DNField, nie ma jak tego przekazać potem
-# c) custom_func generujący instancje modelu
-
-# wyjątki zrobić
-
 # małe i duże litery są przez pumpkin'a rozróżnianie ale ldap je olewa
 
 # ModelField i ModelListField - przechowuje dn'y innych obiektów, zwraca
 # instancje model z podanej listy, tylko co ma zwracać jak dn wskazuje na obiekt
 # który nie istnieje
-
-# rekursywny delete?
 
 # recursywny rename?
 

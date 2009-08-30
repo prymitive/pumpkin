@@ -7,10 +7,18 @@ Created on 2009-06-11
 '''
 
 
+import logging
+
 from functools import partial
 
+from debug import PUMPKIN_LOGLEVEL
 from fields import Field, StringListField
 import exceptions
+
+
+logging.basicConfig(level=PUMPKIN_LOGLEVEL)
+log = logging.getLogger(__name__)
+
 
 class _model(type):
     """Metaclass for Model. We parse Model instance namespace looking for Field
@@ -104,7 +112,7 @@ class _model(type):
             return super(_model, cls).__getattribute__(name)
 
 
-class Model(object):
+class _Model(object):
     """This class represents LDAP object
     """
     __metaclass__ = _model
@@ -438,12 +446,18 @@ object classes: %s, all available attrs: %s""" % (
             ref.save()
             self._affected.remove(ref)
 
-    def delete(self):
+    def delete(self, recursive=False):
         """Delete object from LDAP
         """
+        log.debug("Deleting '%s' recursive=%s" % (self.dn, recursive))
         if self.isnew():
             raise Exception, "Can't delete empty object"
         else:
+            # we got recursive delete so we first delete all children objects
+            if recursive:
+                for instance in self.directory.search(
+                    Model, basedn=self.dn, skip_basedn=True, recursive=False):
+                    instance.delete(recursive=recursive)
             self.directory.delete(self.dn)
             self._empty = True
             self._dn = None
@@ -488,3 +502,11 @@ object classes: %s, all available attrs: %s""" % (
             self.directory(self._olddn, oldpass, newpass)
         else:
             self.directory.passwd(self.dn, oldpass, newpass)
+
+
+class Model(_Model):
+    """DN is 'catch all' model type, it has only dn field and is used for
+    example to remove any object from LDAP without knowing it's model type.
+    """
+    _object_class_ = []
+    _rdn_ = []
