@@ -10,6 +10,10 @@ AUTH_SIMPLE - perform simple bind
 AUTH_SASL - perform SASL bind
 '''
 
+
+import ldap
+
+
 AUTH_SIMPLE = 0
 AUTH_SASL = 1
 
@@ -31,7 +35,7 @@ class LDAPResource(object):
         self.password = None
         self.basedn = ''
         self.tls = False
-        self.timeout = -1
+        self.timeout = ldap.OPT_TIMEOUT
 
     def auth_method():
         doc = "Auth method, can be AUTH_SIMPLE or AUTH_SASL"
