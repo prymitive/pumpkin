@@ -64,6 +64,9 @@ class ObjectNotFound(Exception):
     """No object with given dn found
     """
 
+class InsufficientAccess(Exception):
+    """User has not rights to access or modify object
+    """
 
 def desc(err):
     """Return ldap exception description if present
