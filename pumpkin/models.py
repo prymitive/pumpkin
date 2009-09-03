@@ -7,15 +7,20 @@ Created on 2009-06-07
 '''
 
 
-from pumpkin.base import Model
+import logging
 
+from pumpkin.debug import PUMPKIN_LOGLEVEL
+from pumpkin.base import Model
 from pumpkin.fields import BinaryField
 from pumpkin.fields import IntegerField
 from pumpkin.fields import IntegerListField
 from pumpkin.fields import StringField
 from pumpkin.fields import StringListField
-
 from pumpkin.filters import eq
+
+
+logging.basicConfig(level=PUMPKIN_LOGLEVEL)
+log = logging.getLogger(__name__)
 
 
 class PosixUser(Model):
@@ -51,13 +56,16 @@ class PosixGroup(Model):
     def _hook_post_save(self):
         """Post save hook needed to keep members gid in sync
         """
+        log.debug("Running post save hook for gid '%s'" % self.gid)
         if self.members:
             for uid in self.members:
+                log.debug("Post save hook call for uid '%s'" % uid)
                 member = self.directory.get(
                     PosixUser,
                     search_filter=eq(PosixUser.uid, uid)
                 )
                 if member:
+                    log.debug("Update gid to '%s' for uid '%s'" % (self.gid, uid))
                     member.gid = self.gid
                     member.save()
 

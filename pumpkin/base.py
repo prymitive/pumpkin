@@ -448,6 +448,14 @@ object classes: %s, all available attrs: %s""" % (
                         ret.append(name)
         return ret
 
+    def get_parent(self):
+        """Return parent object dn.
+        """
+        if self._parent:
+            return self._parent
+        else:
+            return ','.join(self.dn.split(',')[1:])
+
     @run_hooks
     def save(self):
         """Save object into LDAP, if instance in new it will add object
@@ -470,7 +478,9 @@ object classes: %s, all available attrs: %s""" % (
                     self._generate_rdn(),
                     parent = self._parent
                 )
-            self._olddn = None
+                self._olddn = None
+                self._parent = ','.join(self.dn.split(',')[1:])
+                log.debug("Parent after save '%s'" % self._parent)
 
             self.directory.set_attrs(self.dn, record)
 
@@ -493,8 +503,9 @@ object classes: %s, all available attrs: %s""" % (
 
     def set_parent(self, parent_dn):
         """Set parrent object dn, required when creating new object, can also
-        be used to move object aroudn LDAP tree
+        be used to move object aroudn LDAP tree.
         """
+        # save old dn becouse we will need that during save()
         if self._olddn is None and not self.isnew():
             self._olddn = self.dn
         self._parent = parent_dn
@@ -502,6 +513,8 @@ object classes: %s, all available attrs: %s""" % (
     def dn():
         doc = "Object distinguished name"
         def fget(self):
+            # If object is new or was renamed we got _parent so we generate new
+            # dn else we return _dn (dn from constructor)
             if self._parent:
                 return '%s,%s' % (self._generate_rdn(), self._parent)
             elif self._dn:

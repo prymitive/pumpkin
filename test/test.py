@@ -129,6 +129,10 @@ class Test(unittest.TestCase):
     def test_create_object(self):
         """Test creating new object, removing single attribute, deleting object
         """
+        for old in LDAP_CONN.search(PosixGroup,
+            search_filter=eq(PosixGroup.gid, 1234)):
+            old.delete()
+
         self.pg = PosixGroup(LDAP_CONN)
         self.pg.name = u'Test group'
         self.pg.gid = 1234
@@ -174,12 +178,29 @@ class Test(unittest.TestCase):
         self.pg.save()
         self.assertEqual(self.pg.dn, 'cn=nazwa2,ou=groups,dc=company,dc=com')
 
-    def test_affected(self):
-        """Test saving with affected objects
+    def test_rename(self):
+        """Test saving renamed object
+        """
+        for old in LDAP_CONN.search(
+            PosixGroup,
+            search_filter=eq(PosixGroup.gid, 54345)):
+                old.delete()
+
+        self.pg = PosixGroup(LDAP_CONN)
+        self.pg.name = u'test_rename_before'
+        self.pg.gid = 54345
+        self.pg.save()
+
+        self.pg2 = PosixGroup(LDAP_CONN, self.pg.dn)
+        self.pg2.name = u'test_rename_after'
+        self.pg2.save()
+        self.pg2.delete()
+
+    def test_hook_posixgroup(self):
+        """Test saving with PosixGroup hook calls
         """
         self.pg = PosixGroup(LDAP_CONN, 'cn=nazwa,ou=groups,dc=company,dc=com')
-        self.pu = PosixUser(LDAP_CONN, 'cn=Max Blank,ou=users,dc=company,dc=com')
-        self.assertEqual(self.pg.gid, self.pu.gid)
+        self.pu = PosixUser(LDAP_CONN, 'cn=hook_user,ou=users,dc=company,dc=com')
         self.pg.gid = 1094
         self.pg.save()
         self.pu.update()
@@ -234,3 +255,20 @@ class Test(unittest.TestCase):
         """
         qa.passwd('pass123', '123ssap')
         qa.passwd('123ssap', 'pass123')
+
+    def test_get_parent_existing(self):
+        """Test get_parent() method on existing object
+        """
+        self.pg = PosixGroup(LDAP_CONN, 'cn=nazwa,ou=groups,dc=company,dc=com')
+        self.assertEqual(
+            self.pg.get_parent(),
+            'ou=groups,dc=company,dc=com'
+        )
+
+    def test_get_parent_new(self):
+        """Test get_parent() method on new object
+        """
+        self.pg = PosixGroup(LDAP_CONN)
+        self.pg.name = u'test_get_parent'
+        self.pg.gid = 4
+        self.assertEqual(self.pg.get_parent(), self.pg.directory.get_basedn())
