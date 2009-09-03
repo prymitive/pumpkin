@@ -1,0 +1,3 @@
+[submodule "doc/build"]
+	path = doc/build
+	url = ssh://lmierzwa@prymitive.com/~/git/pumpkindoc
