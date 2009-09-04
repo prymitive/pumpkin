@@ -11,6 +11,6 @@ import logging
 
 
 #: Default log level.
-PUMPKIN_LOGLEVEL = logging.DEBUG
+PUMPKIN_LOGLEVEL = logging.INFO
 
 

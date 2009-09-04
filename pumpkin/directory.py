@@ -40,7 +40,7 @@ def ldap_exception_handler(func):
             raise exceptions.ConnectionError(exceptions.desc(e))
         except ldap.INVALID_CREDENTIALS, e:
             raise exceptions.InvalidAuth(exceptions.desc(e))
-        except ldap.INSUFFICIENT_ACCESS. e:
+        except ldap.INSUFFICIENT_ACCESS, e:
             raise exceptions.InsufficientAccess(exceptions.desc(e))
         except ldap.OBJECT_CLASS_VIOLATION, e:
             raise exceptions.SchemaViolation(exceptions.desc(e))
