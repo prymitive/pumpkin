@@ -87,12 +87,12 @@ Creating new entry
 Lets create new posixGroup entry, before we start lets have a look how our model
 for posixGroup is defined::
 
-  class PosixGroup(Entry):
+  class PosixGroup(Model):
     _object_class_ = 'posixGroup'
-    _rdn_ = 'cn'
-    cn = StringField('cn')
-    gid_number = IntegerField('gidNumber')
-    member_uid = IntegerListField('memberUid')
+    _rdn_ = 'name'
+    name = StringField('cn')
+    gid = IntegerField('gidNumber')
+    members = IntegerListField('memberUid')
 
 As we can see there are three fields and one of them is used as :term:`rdn`
 attribute. :class:`~pumpkin.models.PosixGroup` model defines 'cn' as 
@@ -100,9 +100,9 @@ attribute. :class:`~pumpkin.models.PosixGroup` model defines 'cn' as
 *cn=newPosixGroup,ou=groups,dc=company,dc=com*::
 
   >>> pg = PosixGroup(LDAP_CONN)
-  >>> pg.cn = 'Test group'
-  >>> pg.gid_number = 1234
-  >>> pg.member_uid = [1,2,3]
+  >>> pg.name = 'Test group'
+  >>> pg.gid = 1234
+  >>> pg.members = [1,2,3]
   >>> pg.set_parent('ou=groups,dc=company,dc=com')
   >>> pg.save()
   >>> print(pg.dn)

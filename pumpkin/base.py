@@ -537,8 +537,9 @@ object classes: %s, all available attrs: %s""" % (
 
 
 class Model(_Model):
-    """DN is 'catch all' model type, it has only dn field and is used for
-    example to remove any object from LDAP without knowing it's model type.
+    """Base model, it has only dn field and is used for example to remove any
+    object from LDAP without knowing it's model type. All defines models should
+    inherit from this class.
     """
     _object_class_ = []
     _rdn_ = []

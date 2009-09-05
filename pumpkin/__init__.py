@@ -17,11 +17,11 @@ __all__ = [
     'serialize',
 ]
 
-import directory
-import resource
-import base
-import models
-import fields
-import filters
-import exceptions
-import serialize
+import pumpkin.directory
+import pumpkin.resource
+import pumpkin.base
+import pumpkin.models
+import pumpkin.fields
+import pumpkin.filters
+import pumpkin.exceptions
+import pumpkin.serialize
