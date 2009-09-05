@@ -467,7 +467,7 @@ object classes: %s, all available attrs: %s""" % (
             raise Exception("Can't save when required fields are missing: %s" %
                 self.missing_fields())
 
-        record = self.get_attributes(all=False)
+        record = self.get_attributes(all=True)
         if self.isnew():
             self.directory.add_object(self.dn, record)
             self._empty = False

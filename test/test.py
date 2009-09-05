@@ -30,6 +30,7 @@ class QA(Model):
     custom_func = StringField('sn')
     custom_func_value = u'Custom get value'
     bool = BooleanField('initials')
+    attrdel = StringField('departmentNumber')
 
     def _custom_func_fget(self):
         """Simple fget function for 'custom_func' field
@@ -65,9 +66,9 @@ class Test(unittest.TestCase):
     def test_fields(self):
         print('Model fields: %s' %  qa._get_fields().keys())
         self.assertEqual(qa._get_fields().keys(), [
-            'integer_list', 'custom_func', 'string_rw', 'string_list',
-            'integer_ro', 'bool', 'integer', 'string_default', 'object_class',
-            'string', 'uid']
+            'integer_list', 'string_default', 'custom_func', 'string_rw',
+            'string_list', 'integer_ro', 'bool', 'integer', 'attrdel',
+            'object_class', 'string', 'uid']
         )
 
     def test_string(self):
@@ -151,7 +152,7 @@ class Test(unittest.TestCase):
         self.assertEqual(self.pgtest.object_class, [u'posixGroup'])
         self.assertEqual(self.pgtest.name, u'Test group')
         self.assertEqual(self.pgtest.gid, 1234)
-        self.assertEqual(self.pgtest.members, [1, 2, 4, 5])
+        self.assertEqual(self.pgtest.members, None)
 
         self.pg.delete()
 
@@ -213,6 +214,9 @@ class Test(unittest.TestCase):
     def test_bool(self):
         """Test reading and writing to bool field
         """
+        qa.update()
+        qa.bool = True
+        qa.save()
         print('LDAP bool: %s' % qa.bool)
         self.assertEqual(qa.bool, True)
         qa.bool = False
@@ -249,6 +253,19 @@ class Test(unittest.TestCase):
         self.pg.save()
         self.assertEqual(self.pg.dn, u'cn=TestDelete2,dc=company,dc=com')
         self.pg.delete()
+
+    def test_delete_attr(self):
+        """Test removing attribute
+        """
+        qa.update()
+        qa.attrdel = u'xxx'
+        qa.save()
+        qa.update()
+        self.assertEqual(qa.attrdel, u'xxx')
+        qa.attrdel = None
+        qa.save()
+        qa.update()
+        self.assertEqual(qa.attrdel, None)
 
     def test_passwd(self):
         """Test changing password
