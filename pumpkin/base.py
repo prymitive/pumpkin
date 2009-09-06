@@ -473,7 +473,6 @@ object classes: %s, all available attrs: %s""" % (
             # when adding new object we need data dict without None values
             record = self.get_attributes(all=False)
             log.debug("Adding new object to LDAP: '%s'" % self.dn)
-            log.debug("'%s' attributes: '%s'" % (self.dn, record))
             self.directory.add_object(self.dn, record)
             self._empty = False
         else:
@@ -491,7 +490,6 @@ object classes: %s, all available attrs: %s""" % (
 
             record = self.get_attributes(all=True)
             log.debug("Save attributes to LDAP for '%s'" % self.dn)
-            log.debug("'%s' attributes: '%s'" % (self.dn, record))
             self.directory.set_attrs(self.dn, record)
 
     @run_hooks
