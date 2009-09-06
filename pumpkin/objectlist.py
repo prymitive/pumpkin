@@ -7,7 +7,14 @@ Created on 2009-07-12
 '''
 
 
+import logging
+
+from pumpkin.debug import PUMPKIN_LOGLEVEL
 from pumpkin.serialize import pickle_object
+
+
+logging.basicConfig(level=PUMPKIN_LOGLEVEL)
+log = logging.getLogger(__name__)
 
 
 class ObjectList(list):
@@ -31,6 +38,17 @@ class ObjectList(list):
         """Returns only objects with attr atribute set (not None or empty str)
         """
         return self.with_attrs([attr])
+
+    def by_dn(self, dn):
+        """Search for object with given dn and return it if found, return None
+        if not found.
+        """
+        for obj in self:
+            if obj.dn == dn:
+                log.debug("Found object '%s'" % obj.dn)
+                return obj
+        else:
+            return None
 
     def pickle(self):
         """Returns list of pickled objects

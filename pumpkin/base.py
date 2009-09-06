@@ -377,20 +377,22 @@ object classes: %s, all available attrs: %s""" % (
         return ret
 
     def get_attributes(self, all=True):
-        """Returns dict with all attributes that are set, values will be in LDAP
-        format (list of str)
+        """Returns dict with all non read-only attributes, values will be in
+        LDAP format (list of str).
 
         @ivar all: if True return all attributes, even not set, if False return
-        only attributes with value
+        only attributes with not None value.
         """
         # we need to make sure that objectClass is set
         record = {
             'objectClass': self._get_fields()['object_class'].encode2str(
                 self.object_class),
         }
-        for (attr, value) in self._storage.items():
-            if (value is not None or all) and attr not in record.keys():
-                record[attr] = value
+        for field in self._get_fields().values():
+            if not field.readonly:
+                value = self._get_attr(field.attr)
+                if (value is not None or all) and field.attr not in record.keys():
+                    record[field.attr] = value
         return record
 
     @run_hooks
@@ -467,13 +469,17 @@ object classes: %s, all available attrs: %s""" % (
             raise Exception("Can't save when required fields are missing: %s" %
                 self.missing_fields())
 
-        record = self.get_attributes(all=True)
         if self.isnew():
+            # when adding new object we need data dict without None values
+            record = self.get_attributes(all=False)
+            log.debug("Adding new object to LDAP: '%s'" % self.dn)
+            log.debug("'%s' attributes: '%s'" % (self.dn, record))
             self.directory.add_object(self.dn, record)
             self._empty = False
         else:
 
             if self._olddn:
+                log.debug("Rename object from '%s' to '%s'" % (self._olddn, self.dn))
                 self.directory.rename(
                     self._olddn,
                     self._generate_rdn(),
@@ -483,6 +489,9 @@ object classes: %s, all available attrs: %s""" % (
                 self._parent = ','.join(self.dn.split(',')[1:])
                 log.debug("Parent after save '%s'" % self._parent)
 
+            record = self.get_attributes(all=True)
+            log.debug("Save attributes to LDAP for '%s'" % self.dn)
+            log.debug("'%s' attributes: '%s'" % (self.dn, record))
             self.directory.set_attrs(self.dn, record)
 
     @run_hooks
