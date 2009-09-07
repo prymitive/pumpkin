@@ -31,8 +31,8 @@ operations, including searches, so if we would want to list entries in
 *ou=users*, *dc=company,dc=com* will be appended to it so we don't have to enter
 it over and over.
 
-Reading and writing to LDAP using models
-----------------------------------------
+Accessing LDAP data using models
+--------------------------------
 
 To get a single entry (posixGroup in this example) from LDAP database we will
 create new instance of :class:`~pumpkin.models.PosixGroup` model, mapped to
@@ -82,7 +82,7 @@ As we can see we will get the list of all entries that are matching
   cn=group3,ou=groups,dc=company,dc=com
 
 Creating new entry
------------------------------
+------------------
 
 Lets create new posixGroup entry, before we start lets have a look how our model
 for posixGroup is defined::
@@ -101,12 +101,67 @@ attribute. :class:`~pumpkin.models.PosixGroup` model defines 'cn' as
 
   >>> pg = PosixGroup(LDAP_CONN)
   >>> pg.name = 'Test group'
-  >>> pg.gid = 1234
   >>> pg.members = [1,2,3]
   >>> pg.set_parent('ou=groups,dc=company,dc=com')
+
+Note that if we would not set entry parent, LDAP resource basedn would be used
+as our entry parent. Now it's time to save our entry to LDAP, before we proceed
+we should check if all fields required by schema are set::
+
+  >>> pg.missing_fields()
+  ['gid']
+
+We need to set *gid* field before saving entry, otherwise we would get
+exception::
+
+  >>> pg.gid = 1234
+  >>> pg.missing_fields()
+  []
+
+All fields are set so we can save our entry::
+
   >>> pg.save()
   >>> print(pg.dn)
   cn=Test group,ou=groups,dc=company,dc=com
+
+Renaming and moving entries
+---------------------------
+
+We got our PosixGroup object::
+
+  >>> pg.dn
+  cn=Test group,ou=groups,dc=company,dc=com
+
+As we know 'name' field is used as a naming attribute so if we set it to new
+value we we also rename our entry::
+
+  >>> pg.name = u'NewName'
+  >>> pg.dn
+  cn=NewName,ou=groups,dc=company,dc=com
+
+We can see that entry :term:`dn` is changed but we need to call save() to save
+our changes into LDAP::
+
+  >>> pg.save()
+
+To move entry around LDAP tree we need to set its parent to new value::
+
+  >>> pg.set_parent('ou=groups2,dc=company,dc=com')
+  >>> pg.dn
+  cn=NewName,ou=groups2,dc=company,dc=com
+  >>> pg.save()
+
+Removing fields from entries
+----------------------------
+
+To remove entry field we can call *del* on it, or set it value to None::
+
+>>> del pg.members
+>>> pg.members = None
+>>> pg.save()
+
+Note that we need to followe server schema, this means that we can not remove
+attributes that are required by schema.
 
 Glossary
 --------
