@@ -31,6 +31,7 @@ class QA(Model):
     custom_func_value = u'Custom get value'
     bool = BooleanField('initials')
     attrdel = StringField('departmentNumber')
+    binary = BinaryField('userCertificate', binary=True)
 
     def _custom_func_fget(self):
         """Simple fget function for 'custom_func' field
@@ -66,9 +67,9 @@ class Test(unittest.TestCase):
     def test_fields(self):
         print('Model fields: %s' %  qa._get_fields().keys())
         self.assertEqual(qa._get_fields().keys(), [
-            'integer_list', 'string_default', 'custom_func', 'string_rw',
-            'string_list', 'integer_ro', 'bool', 'integer', 'attrdel',
-            'object_class', 'string', 'uid']
+            'binary', 'string_default', 'custom_func', 'integer_list',
+            'string_rw', 'string_list', 'integer_ro', 'bool', 'integer',
+            'attrdel', 'object_class', 'string', 'uid']
         )
 
     def test_string(self):
@@ -289,3 +290,18 @@ class Test(unittest.TestCase):
         self.pg.name = u'test_get_parent'
         self.pg.gid = 4
         self.assertEqual(self.pg.get_parent(), self.pg.directory.get_basedn())
+
+    def test_binary(self):
+        """Test reading / writing to field with binary transfer
+        """
+        self.pu = QA(LDAP_CONN, 'cn=test_binary,ou=users,dc=company,dc=com')
+        file = open('test/root.der', 'rb')
+        self.pu.binary = file.read()
+        file.close()
+        self.pu.save()
+        self.pu.update()
+        self.assertNotEqual(self.pu.binary, None)
+        del self.pu.binary
+        self.pu.save()
+        self.pu.update()
+        self.assertEqual(self.pu.binary, None)

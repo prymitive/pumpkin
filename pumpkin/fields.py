@@ -48,11 +48,17 @@ class Field(object):
         @ivar readonly: mark field as read-only
         @ivar default: field will always return this value (instead of getting
         value from LDAP) if field is also set as readonly (optional)
+        @ivar lazy: don't fetch attribute value from LDAP until needed, usefull
+        for big binary attributes like 'jpegPhoto'
+        @ivar binary: field requires binary transfer (for example
+        'userCertificate' attribute needs this
         """
         self.attr = name
         self.readonly = kwargs.get('readonly', False)
         self.default = kwargs.get('default', None)
         self.lazy = kwargs.get('lazy', False)
+        self.binary = kwargs.get('binary', False)
+
 
     def decode2local(self, values, instance=None):
         """Returns field value decoded to local field type, if field represents
@@ -87,7 +93,7 @@ class Field(object):
         """Base fget function implementation, it reads attribute value(s)
            using model instance
         """
-        value = instance._get_attr(self.attr)
+        value = instance._get_attr(self.attr, binary=self.binary)
         if value is None:
             return None
         else:

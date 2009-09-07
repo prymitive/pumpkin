@@ -315,7 +315,7 @@ object classes: %s, all available attrs: %s""" % (
         """
         self._storage[attr] = value
 
-    def _get_attr(self, attr):
+    def _get_attr(self, attr, binary=False):
         """Get attribute from LDAP database for current object
         @param attr: attribute name
         """
@@ -324,9 +324,15 @@ object classes: %s, all available attrs: %s""" % (
         elif self.isnew():
             return None
         else:
+            # if we got binary transfer, we need to append ';binary' to
+            # attribute name
+            if binary:
+                attribute = '%s;binary' % attr
+            else:
+                attribute = attr
             # if object got renamed we must keep searching using old dn until
             # save()
-            value = self.directory.get_attr(self._ldap_dn(), attr)
+            value = self.directory.get_attr(self._ldap_dn(), attribute)
             self._store_attr(attr, value)
             return value
 
@@ -376,6 +382,15 @@ object classes: %s, all available attrs: %s""" % (
                         ret = rdn_part
         return ret
 
+    def _get_field_attr(self, field):
+        """Get field attribute name for search, it appends ';binary' to
+        attribute names if field has binary mode set.
+        """
+        if field.binary:
+            return '%s;binary' % field.attr
+        else:
+            return field.attr
+
     def get_attributes(self, all=True):
         """Returns dict with all non read-only attributes, values will be in
         LDAP format (list of str).
@@ -392,7 +407,7 @@ object classes: %s, all available attrs: %s""" % (
             if not field.readonly:
                 value = self._get_attr(field.attr)
                 if (value is not None or all) and field.attr not in record.keys():
-                    record[field.attr] = value
+                    record[self._get_field_attr(field)] = value
         return record
 
     @run_hooks
@@ -403,12 +418,14 @@ object classes: %s, all available attrs: %s""" % (
         @param force: force fetching all attributes, even lazy
         """
         if missing_only and not force:
+            # fetch only missing fields (not present in self._storage)
             ldap_attrs = []
             for instance in self._get_fields().values():
                 if not self._isstored(instance.attr):
-                    ldap_attrs.append(instance.attr)
+                    ldap_attrs.append(self._get_field_attr(instance))
         else:
-            ldap_attrs = [ref.attr for ref in self._get_fields().values()]
+            # fetch all fields
+            ldap_attrs = [self._get_field_attr(ref) for ref in self._get_fields().values()]
 
         # remove lazy fields
         if not force:
