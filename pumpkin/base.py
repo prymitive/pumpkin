@@ -406,10 +406,17 @@ object classes: %s, all available attrs: %s""" % (
                 self.object_class),
         }
         for field in self._get_fields().values():
-            if not field.readonly:
-                value = self._get_attr(field.attr)
-                if (value is not None or all) and field.attr not in record.keys():
-                    record[self._get_field_attr(field)] = value
+            if field.readonly:
+                # we don't save readonly fields
+                continue
+            if field.lazy:
+                # if field is lazy and all=False check if field value is stored
+                # and if it is stored save it, otherwise skip it from save()
+                if not self._isstored(field.attr):
+                    continue
+            value = self._get_attr(field.attr)
+            if (value is not None or all) and field.attr not in record.keys():
+                record[self._get_field_attr(field)] = value
         return record
 
     @run_hooks
@@ -432,9 +439,15 @@ object classes: %s, all available attrs: %s""" % (
         # remove lazy fields
         if not force:
             for instance in self._get_fields().values():
-                if instance.lazy and instance.attr in ldap_attrs:
-                    ldap_attrs.remove(instance.attr)
+                if instance.lazy:
+                    if instance.attr in ldap_attrs:
+                        ldap_attrs.remove(instance.attr)
+                        log.debug("Lazy attribute: '%s'" % instance.attr)
+                    if '%s;binary' % instance.attr in ldap_attrs:
+                        ldap_attrs.remove('%s;binary' % instance.attr)
+                        log.debug("Lazy attribute: '%s;binary'" % instance.attr)
 
+        log.debug("Updating attrs '%s' for '%s'" % (ldap_attrs, self.dn))
         if ldap_attrs != []:
             for (attr, value) in self.directory.get_attrs(
                 self._ldap_dn(), ldap_attrs).items():
