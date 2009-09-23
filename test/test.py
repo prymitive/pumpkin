@@ -135,27 +135,26 @@ class Test(unittest.TestCase):
             search_filter=eq(PosixGroup.gid, 1234)):
             old.delete()
 
-        self.pg = PosixGroup(LDAP_CONN)
-        self.pg.name = u'Test group'
-        self.pg.gid = 1234
-        self.pg.members = [1, 2, 3, 4, 5]
-        self.pg.remove_member(3)
-        self.pg.set_parent('ou=groups,dc=company,dc=com')
-        self.pg.save()
+        pg = PosixGroup(LDAP_CONN)
+        pg.name = u'Test group'
+        pg.gid = 1234
+        pg.members = [1, 2, 3, 4, 5]
+        pg.remove_member(3)
+        pg.set_parent('ou=groups,dc=company,dc=com')
+        pg.save()
         
-        self.assertEqual(self.pg.dn, 
-                         'cn=Test group,ou=groups,dc=company,dc=com')
+        self.assertEqual(pg.dn, 'cn=Test group,ou=groups,dc=company,dc=com')
 
-        del self.pg.members
-        self.pg.save()
+        del pg.members
+        pg.save()
 
-        self.pgtest = PosixGroup(LDAP_CONN, self.pg.dn)
-        self.assertEqual(self.pgtest.object_class, [u'posixGroup'])
-        self.assertEqual(self.pgtest.name, u'Test group')
-        self.assertEqual(self.pgtest.gid, 1234)
-        self.assertEqual(self.pgtest.members, None)
+        pgtest = PosixGroup(LDAP_CONN, pg.dn)
+        self.assertEqual(pgtest.object_class, [u'posixGroup'])
+        self.assertEqual(pgtest.name, u'Test group')
+        self.assertEqual(pgtest.gid, 1234)
+        self.assertEqual(pgtest.members, None)
 
-        self.pg.delete()
+        pg.delete()
 
     def test_search(self):
         """Test searching for objects
@@ -169,16 +168,16 @@ class Test(unittest.TestCase):
     def test_move(self):
         """Test moving object
         """
-        self.pg = LDAP_CONN.get(PosixGroup, search_filter=eq('gidNumber', 3345))
-        print('Old LDAP dn: %s' % self.pg.dn)
-        self.assertEqual(self.pg.dn, 'cn=nazwa2,ou=groups,dc=company,dc=com')
-        self.pg.set_parent('dc=company,dc=com')
-        self.pg.save()
-        print('New LDAP dn: %s' % self.pg.dn)
-        self.assertEqual(self.pg.dn, 'cn=nazwa2,dc=company,dc=com')
-        self.pg.set_parent('ou=groups,dc=company,dc=com')
-        self.pg.save()
-        self.assertEqual(self.pg.dn, 'cn=nazwa2,ou=groups,dc=company,dc=com')
+        pg = LDAP_CONN.get(PosixGroup, search_filter=eq('gidNumber', 3345))
+        print('Old LDAP dn: %s' % pg.dn)
+        self.assertEqual(pg.dn, 'cn=nazwa2,ou=groups,dc=company,dc=com')
+        pg.set_parent('dc=company,dc=com')
+        pg.save()
+        print('New LDAP dn: %s' % pg.dn)
+        self.assertEqual(pg.dn, 'cn=nazwa2,dc=company,dc=com')
+        pg.set_parent('ou=groups,dc=company,dc=com')
+        pg.save()
+        self.assertEqual(pg.dn, 'cn=nazwa2,ou=groups,dc=company,dc=com')
 
     def test_rename(self):
         """Test saving renamed object
@@ -188,29 +187,29 @@ class Test(unittest.TestCase):
             search_filter=eq(PosixGroup.gid, 54345)):
                 old.delete()
 
-        self.pg = PosixGroup(LDAP_CONN)
-        self.pg.name = u'test_rename_before'
-        self.pg.gid = 54345
-        self.pg.save()
+        pg = PosixGroup(LDAP_CONN)
+        pg.name = u'test_rename_before'
+        pg.gid = 54345
+        pg.save()
 
-        self.pg2 = PosixGroup(LDAP_CONN, self.pg.dn)
-        self.pg2.name = u'test_rename_after'
-        self.pg2.save()
-        self.pg2.delete()
+        pg2 = PosixGroup(LDAP_CONN, pg.dn)
+        pg2.name = u'test_rename_after'
+        pg2.save()
+        pg2.delete()
 
     def test_hook_posixgroup(self):
         """Test saving with PosixGroup hook calls
         """
-        self.pg = PosixGroup(LDAP_CONN, 'cn=nazwa,ou=groups,dc=company,dc=com')
-        self.pu = PosixUser(LDAP_CONN, 'cn=hook_user,ou=users,dc=company,dc=com')
-        self.pg.gid = 1094
-        self.pg.save()
-        self.pu.update()
-        self.assertEqual(self.pg.gid, self.pu.gid)
-        self.pg.gid = 345
-        self.pg.save()
-        self.pu.update()
-        self.assertEqual(self.pg.gid, self.pu.gid)
+        pg = PosixGroup(LDAP_CONN, 'cn=nazwa,ou=groups,dc=company,dc=com')
+        pu = PosixUser(LDAP_CONN, 'cn=hook_user,ou=users,dc=company,dc=com')
+        pg.gid = 1094
+        pg.save()
+        pu.update()
+        self.assertEqual(pg.gid, pu.gid)
+        pg.gid = 345
+        pg.save()
+        pu.update()
+        self.assertEqual(pg.gid, pu.gid)
 
     def test_bool(self):
         """Test reading and writing to bool field
@@ -239,21 +238,21 @@ class Test(unittest.TestCase):
     def test_delete(self):
         """Test object deletion
         """
-        self.pg = PosixGroup(LDAP_CONN)
-        self.pg.name = u'TestDelete'
-        self.pg.gid = 9351
-        self.pg.members = [23, 32]
-        self.pg.set_parent('ou=groups,dc=company,dc=com')
-        self.pg.save()
-        self.pg.delete()
-        self.assertEqual(self.pg.isnew(), True)
+        pg = PosixGroup(LDAP_CONN)
+        pg.name = u'TestDelete'
+        pg.gid = 9351
+        pg.members = [23, 32]
+        pg.set_parent('ou=groups,dc=company,dc=com')
+        pg.save()
+        pg.delete()
+        self.assertEqual(pg.isnew(), True)
         self.assertEqual(
-            self.pg.dn, u'cn=TestDelete,ou=groups,dc=company,dc=com')
-        self.pg.set_parent(u'dc=company,dc=com')
-        self.pg.name = u'TestDelete2'
-        self.pg.save()
-        self.assertEqual(self.pg.dn, u'cn=TestDelete2,dc=company,dc=com')
-        self.pg.delete()
+            pg.dn, u'cn=TestDelete,ou=groups,dc=company,dc=com')
+        pg.set_parent(u'dc=company,dc=com')
+        pg.name = u'TestDelete2'
+        pg.save()
+        self.assertEqual(pg.dn, u'cn=TestDelete2,dc=company,dc=com')
+        pg.delete()
 
     def test_delete_attr(self):
         """Test removing attribute
@@ -277,31 +276,29 @@ class Test(unittest.TestCase):
     def test_get_parent_existing(self):
         """Test get_parent() method on existing object
         """
-        self.pg = PosixGroup(LDAP_CONN, 'cn=nazwa,ou=groups,dc=company,dc=com')
-        self.assertEqual(
-            self.pg.get_parent(),
-            'ou=groups,dc=company,dc=com'
-        )
+        pg = PosixGroup(
+            LDAP_CONN, 'cn=testgroup,ou=groups,dc=company,dc=com')
+        self.assertEqual(pg.get_parent(), 'ou=groups,dc=company,dc=com')
 
     def test_get_parent_new(self):
         """Test get_parent() method on new object
         """
-        self.pg = PosixGroup(LDAP_CONN)
-        self.pg.name = u'test_get_parent'
-        self.pg.gid = 4
-        self.assertEqual(self.pg.get_parent(), self.pg.directory.get_basedn())
+        pg = PosixGroup(LDAP_CONN)
+        pg.name = u'test_get_parent'
+        pg.gid = 4
+        self.assertEqual(pg.get_parent(), pg.directory.get_basedn())
 
     def test_binary(self):
         """Test reading / writing to field with binary transfer
         """
-        self.pu = QA(LDAP_CONN, 'cn=test_binary,ou=users,dc=company,dc=com')
+        pu = QA(LDAP_CONN, 'cn=test_binary,ou=users,dc=company,dc=com')
         file = open('test/root.der', 'rb')
-        self.pu.binary = file.read()
+        pu.binary = file.read()
         file.close()
-        self.pu.save()
-        self.pu.update()
-        self.assertNotEqual(self.pu.binary, None)
-        del self.pu.binary
-        self.pu.save()
-        self.pu.update()
-        self.assertEqual(self.pu.binary, None)
+        pu.save()
+        pu.update()
+        self.assertNotEqual(pu.binary, None)
+        del pu.binary
+        pu.save()
+        pu.update()
+        self.assertEqual(pu.binary, None)

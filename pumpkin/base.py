@@ -394,8 +394,10 @@ object classes: %s, all available attrs: %s""" % (
             return field.attr
 
     def get_attributes(self, all=True):
-        """Returns dict with all non read-only attributes, values will be in
-        LDAP format (list of str).
+        """Returns dict with object attributes, values will be in
+        LDAP format (list of str). All readonly fields will be skipped, lazy
+        fields that are not stored in local storage (not set to new value or
+        not fetched from LDAP) will be skipped.
 
         @ivar all: if True return all attributes, even not set, if False return
         only attributes with not None value.

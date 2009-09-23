@@ -16,6 +16,19 @@ member: cn=Max Blank,ou=users,dc=company,dc=com
 objectClass: groupOfNames
 objectClass: top
 
+dn: cn=nazwa,ou=groups,dc=company,dc=com
+objectClass: posixGroup
+objectClass: top
+memberUid: 1002
+gidNumber: 345
+cn: nazwa
+
+dn: cn=nazwa2,ou=groups,dc=company,dc=com
+objectClass: posixGroup
+objectClass: top
+gidNumber: 3345
+cn: nazwa2
+
 dn: cn=testgroup,ou=groups,dc=company,dc=com
 objectClass: posixGroup
 objectClass: top
@@ -27,21 +40,44 @@ objectClass: organizationalUnit
 objectClass: top
 ou: users
 
-dn: cn=Max Blank,ou=users,dc=company,dc=com
-givenName: Max
-sn: Blank
-gidNumber: 1000
-homeDirectory: /home/users/max.blank
-loginShell: /bin/sh
-userPassword: dupa
-uidNumber: 1000
-mobile: 12345
-mobile: 67890
-cn: Max Blank
-mail: max@blank.com
-mail: max.blank@blank.com
-uid: max.blank
+dn: cn=hook_user,ou=users,dc=company,dc=com
+cn: hook_user
 objectClass: inetOrgPerson
 objectClass: posixAccount
 objectClass: top
-description: Opis
+uidNumber: 1002
+gidNumber: 345
+sn: binary
+homeDirectory: /home/users/test
+uid: test_binary
+
+dn: cn=Max Blank,ou=users,dc=company,dc=com
+givenName: Max
+gidNumber: 1000
+homeDirectory: /home/users/max.blank
+loginShell: /bin/sh
+userPassword: {SSHA}5Vovbw70D+hMzHXUMIMBhLu5ZSR1mv5P
+description:: xITEhsW5xJjFu8WBw5MgV2VkIFNlcCAyMyAyMTowNzoyNSAyMDA5
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: top
+uidNumber: 1000
+mobile: 12345
+mobile: 67890
+sn: Blank
+uid: max.blank
+mail: max@blank.com
+mail: max.blank@blank.com
+cn: Max Blank
+initials: False
+
+dn: cn=test_binary,ou=users,dc=company,dc=com
+gidNumber: 1000
+homeDirectory: /home/users/test
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: top
+uidNumber: 1001
+sn: binary
+uid: test_binary
+cn: test_binary
