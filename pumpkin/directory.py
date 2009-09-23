@@ -29,7 +29,6 @@ def ldap_exception_handler(func):
     """
     @wraps(func)
     def handler(*args, **kwargs):
-        log.debug("LDAP exception handler: %s" % func)
         try:
             return func(*args, **kwargs)
         except ldap.SERVER_DOWN, e:
@@ -58,7 +57,6 @@ def ldap_reconnect_handler(func):
     def handler(*args, **kwargs):
         """This handler takes care of exception handling.
         """
-        log.debug("LDAP reconnect handler: %s" % func)
         try:
             return func(*args, **kwargs)
         except exceptions.ServerDown, e:
