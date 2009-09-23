@@ -33,6 +33,7 @@ def run_hooks(func):
             log.debug("Running pre hook '%s' on '%s'" % (pre_name, model))
             hook_call = getattr(model, pre_name)
             hook_call()
+            log.debug("Pre hook finished")
 
         # run real method
         ret = func(*args, **kwargs)
@@ -42,6 +43,7 @@ def run_hooks(func):
             log.debug("Running post hook '%s' on '%s'" % (post_name, model))
             hook_call = getattr(model, post_name)
             hook_call()
+            log.debug("Post hook finished")
         return ret
     return hook
 
