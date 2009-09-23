@@ -127,7 +127,7 @@ class StringListField(Field):
                     raise ValueError, "Not a unicode value: %s" % value
             return values
         else:
-            raise ValueError, "Not a list of unicode values"
+            raise ValueError, "Not a list of unicode values: '%s'" % values
 
     def decode2local(self, values, instance=None):
         """Returns list of unicode values
