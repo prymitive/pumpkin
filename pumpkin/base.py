@@ -322,7 +322,11 @@ object classes: %s, all available attrs: %s""" % (
         @param attr: attribute name
         """
         if self._isstored(attr):
-            return self._storage.get(attr)
+            value = self._storage.get(attr)
+            if value == []:
+                return None
+            else:
+                return value
         elif self.isnew():
             return None
         else:
