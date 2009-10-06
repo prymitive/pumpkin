@@ -47,6 +47,8 @@ def ldap_exception_handler(func):
             raise exceptions.DeleteOnParent(exceptions.desc(e))
         except ldap.NO_SUCH_OBJECT, e:
             raise exceptions.ObjectNotFound(exceptions.desc(e))
+        except ldap.CONSTRAINT_VIOLATION, e:
+            raise exceptions.ConstraintViolation(exceptions.desc(e))
     return handler
 
 

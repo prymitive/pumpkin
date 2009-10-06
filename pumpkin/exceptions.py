@@ -68,6 +68,11 @@ class InsufficientAccess(Exception):
     """User has not rights to access or modify object
     """
 
+
+class ConstraintViolation(Exception):
+    """Constraint violation (low password quality etc)
+    """
+
 def desc(err):
     """Return ldap exception description if present
     """

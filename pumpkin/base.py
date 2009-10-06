@@ -323,7 +323,7 @@ object classes: %s, all available attrs: %s""" % (
         """
         if self._isstored(attr):
             value = self._storage.get(attr)
-            if value == []:
+            if value in [[], '']:
                 return None
             else:
                 return value
