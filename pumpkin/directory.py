@@ -117,7 +117,9 @@ class Directory(object):
     def _bind(self):
         """Bind to server
         """
-        if self._resource.auth_method == resource.AUTH_SIMPLE:
+        if self._resource.login is None:
+            pass # no authentication is needed
+        elif self._resource.auth_method == resource.AUTH_SIMPLE:
             log.debug(
                 "Performing SIMPLE BIND operation to '%s' as '%s'" % (
                     self._resource.server, self._resource.login))
