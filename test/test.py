@@ -32,6 +32,7 @@ class QA(Model):
     bool = BooleanField('initials')
     attrdel = StringField('departmentNumber')
     binary = BinaryField('userCertificate', binary=True)
+    missing = StringField('employeeType', default='defaultValue123')
 
     def _custom_func_fget(self):
         """Simple fget function for 'custom_func' field
@@ -68,8 +69,8 @@ class Test(unittest.TestCase):
         print('Model fields: %s' %  qa._get_fields().keys())
         self.assertEqual(qa._get_fields().keys(), [
             'binary', 'string_default', 'custom_func', 'integer_list',
-            'string_rw', 'string_list', 'integer_ro', 'bool', 'integer',
-            'attrdel', 'object_class', 'string', 'uid']
+            'missing', 'string_rw', 'string_list', 'integer_ro', 'bool',
+            'integer', 'attrdel', 'object_class', 'string', 'uid']
         )
 
     def test_string(self):
@@ -152,7 +153,7 @@ class Test(unittest.TestCase):
         self.assertEqual(pgtest.object_class, [u'posixGroup'])
         self.assertEqual(pgtest.name, u'Test group')
         self.assertEqual(pgtest.gid, 1234)
-        self.assertEqual(pgtest.members, None)
+        self.assertEqual(pgtest.members, [])
 
         pg.delete()
 
@@ -302,3 +303,8 @@ class Test(unittest.TestCase):
         pu.save()
         pu.update()
         self.assertEqual(pu.binary, None)
+
+    def test_default(self):
+        """Test settings default value for missing attributes
+        """
+        self.assertEqual(qa.missing, 'defaultValue123')

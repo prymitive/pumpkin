@@ -41,13 +41,18 @@ def get_singleval(value):
 class Field(object):
     """Base field with get and set methods
     """
+    # default value to return if attribute is not set in LDAP, passing
+    # 'default' kwarg passed to __init__() will override this
+    default = None
+    
     def __init__(self, name, **kwargs):
         """Constructor
         @param name: field name
 
         @ivar readonly: mark field as read-only
-        @ivar default: field will always return this value (instead of getting
-        value from LDAP) if field is also set as readonly (optional)
+        @ivar default: default value to return if LDAP attribute for this field
+        is not set, it will override fields self._default value, defaults
+        to None, this is used mostly to return '[]' when *ListField is empty
         @ivar lazy: don't fetch attribute value from LDAP until needed, usefull
         for big binary attributes like 'jpegPhoto'
         @ivar binary: field requires binary transfer (for example
@@ -55,9 +60,11 @@ class Field(object):
         """
         self.attr = name
         self.readonly = kwargs.get('readonly', False)
-        self.default = kwargs.get('default', None)
         self.lazy = kwargs.get('lazy', False)
         self.binary = kwargs.get('binary', False)
+
+        if kwargs.has_key('default'):
+            self.default = kwargs.get('default')
 
 
     def decode2local(self, values, instance=None):
@@ -95,7 +102,7 @@ class Field(object):
         """
         value = instance._get_attr(self.attr, binary=self.binary)
         if value is None:
-            return None
+            return self.default
         else:
             return self.decode2local(value, instance=instance)
 
@@ -117,6 +124,8 @@ class Field(object):
 class StringListField(Field):
     """List of unicode values
     """
+    default = []
+
     def validate(self, values):
         """Check if new value is a list of unicode values
         """
@@ -143,6 +152,8 @@ class StringListField(Field):
 class StringField(StringListField):
     """Unicode string
     """
+    default = None
+
     def validate(self, values):
         """Check if new value is unicode
         """
@@ -166,6 +177,8 @@ class StringField(StringListField):
 class IntegerListField(Field):
     """List of integer values
     """
+    default = []
+
     def validate(self, values):
         """Check if new value is a list of int values
         """
@@ -192,6 +205,8 @@ class IntegerListField(Field):
 class IntegerField(IntegerListField):
     """Int value
     """
+    default = None
+
     def validate(self, values):
         """Check if new value is int
         """
