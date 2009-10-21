@@ -7,6 +7,10 @@ Created on 2009-06-08
 '''
 
 
+import time
+import datetime
+
+
 def unique_list(values):
     """Strip all reapeted values in list
     """
@@ -281,3 +285,27 @@ class BinaryField(Field):
         """
         check_singleval(self.attr, values)
         return get_singleval(values)
+
+
+class DatetimeField(Field):
+    """Single valued datetime field
+    """
+
+    def validate(self, values):
+        """Check if value is valid datetime instance
+        """
+        if isinstance(values, datetime.datetime):
+            return values
+        else:
+            raise ValueError("Not a datatime value: %s" % values)
+
+    def encode2str(self, values, instance=None):
+        """Return str values
+        """
+        return [str(time.mktime(values.timetuple()))]
+
+    def decode2local(self, values, instance=None):
+        """Return datetime instance
+        """
+        check_singleval(self.attr, values)
+        return datetime.datetime.fromtimestamp(float(get_singleval(values)))

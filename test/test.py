@@ -10,6 +10,7 @@ from pumpkin.models import PosixGroup, PosixUser
 
 import unittest
 import time
+import datetime
 
 from conn import LDAP_CONN
 
@@ -33,6 +34,7 @@ class QA(Model):
     attrdel = StringField('departmentNumber')
     binary = BinaryField('userCertificate', binary=True)
     missing = StringField('employeeType', default='defaultValue123')
+    dtime = DatetimeField('givenName')
 
     def _custom_func_fget(self):
         """Simple fget function for 'custom_func' field
@@ -68,7 +70,7 @@ class Test(unittest.TestCase):
     def test_fields(self):
         print('Model fields: %s' %  qa._get_fields().keys())
         self.assertEqual(qa._get_fields().keys(), [
-            'binary', 'string_default', 'custom_func', 'integer_list',
+            'binary', 'string_default', 'custom_func', 'integer_list', 'dtime',
             'missing', 'string_rw', 'string_list', 'integer_ro', 'bool',
             'integer', 'attrdel', 'object_class', 'string', 'uid']
         )
@@ -308,3 +310,23 @@ class Test(unittest.TestCase):
         """Test settings default value for missing attributes
         """
         self.assertEqual(qa.missing, 'defaultValue123')
+
+
+    def test_datetime(self):
+        """Test datetime field
+        """
+        dt = QA(LDAP_CONN, 'cn=test_datetime,ou=users,dc=company,dc=com')
+        del dt.dtime
+        qa.save()
+
+        dtime = datetime.datetime.now()
+        dt.dtime = dtime
+        dt.save()
+
+        dt2 = QA(LDAP_CONN, 'cn=test_datetime,ou=users,dc=company,dc=com')
+        print dt2.dtime
+
+        self.assertEqual(dtime.ctime(), dt2.dtime.ctime())
+
+        del dt.dtime
+        qa.save()

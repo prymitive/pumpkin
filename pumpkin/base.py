@@ -527,7 +527,7 @@ object classes: %s, all available attrs: %s""" % (
                 log.debug("Parent after save '%s'" % self._parent)
 
             record = self.get_attributes(all=True)
-            log.debug("Save attributes to LDAP for '%s'" % self.dn)
+            log.debug("Save attributes for '%s': %s" % (self.dn, record))
             self.directory.set_attrs(self.dn, record)
 
     @run_hooks
