@@ -302,7 +302,7 @@ class DatetimeField(Field):
     def encode2str(self, values, instance=None):
         """Return str values
         """
-        return [str(time.mktime(values.timetuple()))]
+        return [str(int(time.mktime(values.timetuple())))]
 
     def decode2local(self, values, instance=None):
         """Return datetime instance

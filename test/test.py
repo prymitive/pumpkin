@@ -34,7 +34,7 @@ class QA(Model):
     attrdel = StringField('departmentNumber')
     binary = BinaryField('userCertificate', binary=True)
     missing = StringField('employeeType', default='defaultValue123')
-    dtime = DatetimeField('givenName')
+    dtime = DatetimeField('gidNumber')
 
     def _custom_func_fget(self):
         """Simple fget function for 'custom_func' field
