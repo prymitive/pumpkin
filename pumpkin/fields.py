@@ -189,7 +189,7 @@ class IntegerListField(Field):
         if isinstance(values, list):
             values = unique_list(values)
             for value in values:
-                if not isinstance(value, int):
+                if not isinstance(value, (int, long)):
                     raise ValueError, "Not a int value: %s" % value
             return values
         else:
@@ -214,7 +214,7 @@ class IntegerField(IntegerListField):
     def validate(self, values):
         """Check if new value is int
         """
-        if isinstance(values, int):
+        if isinstance(values, (int, long)):
             return values
         else:
             raise ValueError("Not a int value: %s" % values)
