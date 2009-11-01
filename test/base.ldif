@@ -52,32 +52,54 @@ homeDirectory: /home/users/test
 uid: test_binary
 
 dn: cn=Max Blank,ou=users,dc=company,dc=com
-givenName: Max
-gidNumber: 1000
 homeDirectory: /home/users/max.blank
 loginShell: /bin/sh
-userPassword: {SSHA}5Vovbw70D+hMzHXUMIMBhLu5ZSR1mv5P
-description:: xITEhsW5xJjFu8WBw5MgV2VkIFNlcCAyMyAyMTowNzoyNSAyMDA5
+userPassword: {SSHA}RT5M7e3HF/pbJU1Vd9tyvCy1zkGzWCd0
+uid: max.blank
 objectClass: inetOrgPerson
 objectClass: posixAccount
 objectClass: top
+sn: Blank
 uidNumber: 1000
+gidNumber: 1000
 mobile: 12345
 mobile: 67890
-sn: Blank
-uid: max.blank
 mail: max@blank.com
 mail: max.blank@blank.com
+initials: True
 cn: Max Blank
-initials: False
+description:: xITEhsW5xJjFu8WBw5MgU3VuIE5vdiAgMSAyMDo0OTozNCAyMDA5
 
 dn: cn=test_binary,ou=users,dc=company,dc=com
-gidNumber: 1000
 homeDirectory: /home/users/test
+uid: test_binary
 objectClass: inetOrgPerson
 objectClass: posixAccount
 objectClass: top
-uidNumber: 1001
 sn: binary
-uid: test_binary
+uidNumber: 1001
+gidNumber: 1000
 cn: test_binary
+
+dn: cn=test_datetime,ou=users,dc=company,dc=com
+homeDirectory: /home/users/test
+givenName: 1256675335.0
+uid: test_datetime
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: top
+sn: datetime
+uidNumber: 10
+gidNumber: 1257104974
+cn: test_datetime
+
+dn: cn=test_dict,ou=users,dc=company,dc=com
+homeDirectory: /home/users/test
+uid: test_dict
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: top
+sn: dict
+uidNumber: 11
+gidNumber: 941
+cn: test_dict
