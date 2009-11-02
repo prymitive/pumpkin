@@ -35,6 +35,7 @@ class QA(Model):
     binary = BinaryField('userCertificate', binary=True)
     missing = StringField('employeeType', default='defaultValue123')
     dtime = DatetimeField('gidNumber')
+    dict_field = DictField('carLicense')
 
     def _custom_func_fget(self):
         """Simple fget function for 'custom_func' field
@@ -70,9 +71,10 @@ class Test(unittest.TestCase):
     def test_fields(self):
         print('Model fields: %s' %  qa._get_fields().keys())
         self.assertEqual(qa._get_fields().keys(), [
-            'binary', 'string_default', 'custom_func', 'integer_list', 'dtime',
-            'missing', 'string_rw', 'string_list', 'integer_ro', 'bool',
-            'integer', 'attrdel', 'object_class', 'string', 'uid']
+            'binary', 'attrdel', 'uid', 'missing', 'dtime', 'string_rw',
+            'dict_field', 'string_list', 'integer_ro', 'bool', 'integer_list',
+            'integer', 'string_default', 'object_class', 'string', 'custom_func'
+            ]
         )
 
     def test_string(self):
@@ -235,7 +237,7 @@ class Test(unittest.TestCase):
         print('New rdn: %s' % qa._generate_rdn())
         self.assertEqual(
             qa._generate_rdn(),
-            'mail=max@blank.com+mail=max.blank@blank.com+cn=Max Blank+uid=max.blank'
+            u'uid=max.blank+mail=max@blank.com+mail=max.blank@blank.com+cn=Max Blank'
         )
 
     def test_delete(self):
@@ -330,3 +332,24 @@ class Test(unittest.TestCase):
 
         del dt.dtime
         qa.save()
+
+
+    def test_dict(self):
+        """Test dict filed
+        """
+        dt = QA(LDAP_CONN, 'cn=test_dict,ou=users,dc=company,dc=com')
+        del dt.dict_field
+        dt.save()
+
+        testval = dict(first=u'1', second=u'two')
+
+        dt.dict_field = testval
+        dt.save()
+
+        dt2 = QA(LDAP_CONN, 'cn=test_dict,ou=users,dc=company,dc=com')
+        print dt2.dict_field
+
+        self.assertEqual(testval, dt2.dict_field)
+
+        del dt.dict_field
+        dt.save()

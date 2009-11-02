@@ -309,3 +309,40 @@ class DatetimeField(Field):
         """
         check_singleval(self.attr, values)
         return datetime.datetime.fromtimestamp(float(get_singleval(values)))
+
+
+class DictField(Field):
+    """Dictionary field with only unicode values.
+    """
+    def __init__(self, name, **kwargs):
+        """Adds 'separator' kwarg
+        """
+        Field.__init__(self, name, **kwargs)
+        self.delimiter = kwargs.get('delimiter', "|")
+
+
+    def validate(self, values):
+        """Check if value is valid dict instance
+        """
+        if isinstance(values, dict):
+            for value in values.values():
+                if not isinstance(value, unicode):
+                    raise ValueError("'%s' is not a unicode value, DictField \
+                can only store items with unicode values." % value)
+            return values
+        else:
+            raise ValueError("Not a dict value: %s" % values)
+
+    def encode2str(self, values, instance=None):
+        """Return str values
+        """
+        return ['%s%s%s' % (
+            k.encode("utf-8"),
+            self.delimiter,
+            v.encode("utf-8")) for (k,v) in values.items()
+        ]
+
+    def decode2local(self, values, instance=None):
+        """Return dict instance
+        """
+        return dict((i.split(self.delimiter)) for i in values)
