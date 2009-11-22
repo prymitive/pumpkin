@@ -3,11 +3,13 @@
 """Test module
 """
 
+from pumpkin import resource
 from pumpkin.filters import eq
 from pumpkin.fields import *
 from pumpkin.base import Model
 from pumpkin.models import PosixGroup, PosixUser
 
+import nose
 import unittest
 import time
 import datetime
@@ -353,3 +355,39 @@ class Test(unittest.TestCase):
 
         del dt.dict_field
         dt.save()
+
+
+    def test_auth_method(self):
+        """Test setting Resource.auth_method.
+        """
+        res = resource.LDAPResource()
+        res.auth_method = resource.AUTH_SASL
+        self.assertEqual(res.auth_method, resource.AUTH_SASL)
+        res.auth_method = resource.AUTH_SIMPLE
+        self.assertEqual(res.auth_method, resource.AUTH_SIMPLE)
+
+
+    @nose.tools.raises(ValueError)
+    def test_auth_method_badvalue(self):
+        """Test setting Resource.auth_method with bad value.
+        """
+        res = resource.LDAPResource()
+        res.auth_method = '9999'
+
+
+    def test_sasl_method(self):
+        """Test setting Resource.sasl_method.
+        """
+        res = resource.LDAPResource()
+        res.sasl_method = resource.CRAM_MD5
+        self.assertEqual(res.sasl_method, resource.CRAM_MD5)
+        res.sasl_method = resource.DIGEST_MD5
+        self.assertEqual(res.sasl_method, resource.DIGEST_MD5)
+
+
+    @nose.tools.raises(ValueError)
+    def test_sasl_method_badvalue(self):
+        """Test setting Resource.sasl_method with bad value.
+        """
+        res = resource.LDAPResource()
+        res.sasl_method = '9999'
