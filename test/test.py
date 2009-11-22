@@ -80,17 +80,14 @@ class Test(unittest.TestCase):
     def test_object_class_read(self):
         """Test reading full object_class
         """
-        print('LDAP object_class: %s' % qa.object_class)
         self.assertEqual(qa.object_class,
                          [u'inetOrgPerson', u'posixAccount', u'top'])
 
     def test_private_class(self):
-        print('Model private class: %s' % qa.private_classes())
         self.assertEqual(
             qa.private_classes(), ['posixAccount', 'inetOrgPerson'])
 
     def test_fields(self):
-        print('Model fields: %s' %  qa._get_fields().keys())
         self.assertEqual(qa._get_fields().keys(), [
             'binary', 'attrdel', 'uid', 'missing', 'dtime', 'string_rw',
             'dict_field', 'string_list', 'integer_ro', 'bool', 'lazy_binary', 
@@ -101,13 +98,11 @@ class Test(unittest.TestCase):
     def test_string(self):
         """Test reading cached string
         """
-        print('LDAP string_cached: %s' % qa.string)
         self.assertEqual(qa.string, u'Max Blank')
 
     def test_string_list(self):
         """Test reading list of strings
         """
-        print('LDAP string_list: %s' % qa.string_list)
         self.assertEqual(
             qa.string_list,
             [u'max@blank.com', u'max.blank@blank.com']
@@ -116,13 +111,11 @@ class Test(unittest.TestCase):
     def test_integer(self):
         """Test reading integer
         """
-        print('LDAP integer: %s' % qa.integer)
         self.assertEqual(qa.integer, 1000)
 
     def test_string_default(self):
         """Test reading read-only string with default value
         """
-        print('LDAP string_default: %s' % qa.string_default)
         self.assertEqual(qa.string_default, '/')
 
     def test_string_write(self):
@@ -131,27 +124,23 @@ class Test(unittest.TestCase):
         desc = unicode('ĄĆŹĘŻŁÓ %s' % time.asctime(), 'utf-8')
         qa.string_rw = desc
         qa.save()
-        print('LDAP string write: %s' % qa.string_rw)
         self.assertEqual(qa.string_rw, desc)
         qa.string_rw = u'Opis'
 
     def test_integer_list(self):
         """Test reading list of integers
         """
-        print('LDAP integer_list: %s' % qa.integer_list)
         self.assertEqual(qa.integer_list, [12345, 67890])
 
     def test_custom_get(self):
         """Test reading with custom get function
         """
-        print('LDAP custom_get: %s' % qa.custom_func)
         self.assertEqual(qa.custom_func, u'Custom get value')
 
     def test_custom_set(self):
         """Test writing with custom set function
         """
         qa.custom_func = u'New custom set value'
-        print('LDAP custom_set: %s' % qa.custom_func)
         self.assertEqual(qa.custom_func, u'New custom set value')
 
     def test_create_object(self):
@@ -185,7 +174,6 @@ class Test(unittest.TestCase):
     def test_search(self):
         """Test searching for objects
         """
-        print('LDAP search dn: %s' % LDAP_CONN.search(QA)[0].dn)
         self.assertEqual(
             LDAP_CONN.search(QA)[0].dn,
             'cn=Max Blank,ou=users,dc=company,dc=com'
@@ -195,11 +183,9 @@ class Test(unittest.TestCase):
         """Test moving object
         """
         pg = LDAP_CONN.get(PosixGroup, search_filter=eq('gidNumber', 3345))
-        print('Old LDAP dn: %s' % pg.dn)
         self.assertEqual(pg.dn, 'cn=nazwa2,ou=groups,dc=company,dc=com')
         pg.set_parent('dc=company,dc=com')
         pg.save()
-        print('New LDAP dn: %s' % pg.dn)
         self.assertEqual(pg.dn, 'cn=nazwa2,dc=company,dc=com')
         pg.set_parent('ou=groups,dc=company,dc=com')
         pg.save()
@@ -247,7 +233,6 @@ class Test(unittest.TestCase):
         qa.update()
         qa.bool = True
         qa.save()
-        print('LDAP bool: %s' % qa.bool)
         self.assertEqual(qa.bool, True)
         qa.bool = False
         self.assertEqual(qa.bool, False)
@@ -259,7 +244,6 @@ class Test(unittest.TestCase):
     def test_rdn(self):
         """Test generating new rdn string
         """
-        print('New rdn: %s' % qa._generate_rdn())
         self.assertEqual(
             qa._generate_rdn(),
             u'uid=max.blank+mail=max@blank.com+mail=max.blank@blank.com+cn=Max Blank'
@@ -368,7 +352,6 @@ class Test(unittest.TestCase):
         dt.save()
 
         dt2 = QA(LDAP_CONN, 'cn=test_datetime,ou=users,dc=company,dc=com')
-        print dt2.dtime
 
         self.assertEqual(dtime.ctime(), dt2.dtime.ctime())
 
@@ -389,7 +372,6 @@ class Test(unittest.TestCase):
         dt.save()
 
         dt2 = QA(LDAP_CONN, 'cn=test_dict,ou=users,dc=company,dc=com')
-        print dt2.dict_field
 
         self.assertEqual(testval, dt2.dict_field)
 
