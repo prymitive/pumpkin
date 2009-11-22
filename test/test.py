@@ -4,11 +4,12 @@
 """
 
 from pumpkin import resource
-from pumpkin.filters import eq
+from pumpkin.filters import *
 from pumpkin.fields import *
 from pumpkin.base import Model
 from pumpkin.models import PosixGroup, PosixUser, Unit
 from pumpkin import exceptions
+from pumpkin.serialize import pickle_object, unpickle_object
 
 import nose
 import unittest
@@ -503,3 +504,48 @@ class Test(unittest.TestCase):
         """Test exception on creating model instance with invalid dn
         """
         inv = QA(LDAP_CONN, "cn=InvalidDN,dc=company,dc=com")
+
+
+    def test_pickle(self):
+        """Test pickling and unpickling model instances
+        """
+        s = pickle_object(qa)
+        obj = unpickle_object(s, LDAP_CONN)
+        self.assertEqual(obj.string, u"Max Blank")
+        self.assertEqual(obj.dn, "cn=Max Blank,ou=users,dc=company,dc=com")
+
+
+    def test_filters(self):
+        """Test search filters
+        """
+        users = LDAP_CONN.search(
+            PosixUser, search_filter=eq(PosixUser.firstname, u"ĄĆĘ"))
+        self.assertNotEqual(users, [])
+
+        users = LDAP_CONN.search(
+            PosixUser, search_filter=present(PosixUser.firstname))
+        self.assertNotEqual(users, [])
+
+        users = LDAP_CONN.search(
+            PosixUser, search_filter=startswith(PosixUser.fullname, u"Max"))
+        self.assertNotEqual(users, [])
+
+        users = LDAP_CONN.search(
+            PosixUser, search_filter=endswith(PosixUser.fullname, u"Blank"))
+        self.assertNotEqual(users, [])
+
+        users = LDAP_CONN.search(
+            PosixUser, search_filter=contains(PosixUser.fullname, u"x Bl"))
+        self.assertNotEqual(users, [])
+
+        users = LDAP_CONN.search(
+            PosixUser, search_filter=opor(
+                    contains(PosixUser.fullname, u"ank"),
+                    endswith(PosixUser.fullname, u"dict"),
+                )
+            )
+        self.assertNotEqual(users, [])
+
+        users = LDAP_CONN.search(
+            PosixUser, search_filter=opnot(eq(PosixUser.fullname, u"NotFound")))
+        self.assertNotEqual(users, [])

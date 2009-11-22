@@ -48,7 +48,7 @@ class Field(object):
     # default value to return if attribute is not set in LDAP, passing
     # 'default' kwarg passed to __init__() will override this
     default = None
-    
+
     def __init__(self, name, **kwargs):
         """Constructor
         @param name: field name

@@ -28,6 +28,7 @@ def unicode2str(func):
                 nkwargs[kwarg] = value.encode('utf-8')
             else:
                 nkwargs[kwarg] = value
+
         return func( *nargs, **nkwargs)
     return newfunc
 
@@ -49,14 +50,14 @@ def startswith(attr, value):
     """Will match only objects with *attr* attribute set to string that starts
     with *value* substring
     """
-    return '(%s=*%s)' % (attr, value)
+    return '(%s=%s*)' % (attr, value)
 
 @unicode2str
 def endswith(attr, value):
     """Will match only objects with *attr* attribute set to string that ends
     with *value* substring
     """
-    return '(%s=%s*)' % (attr, value)
+    return '(%s=*%s)' % (attr, value)
 
 @unicode2str
 def contains(attr, value):
