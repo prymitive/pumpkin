@@ -536,7 +536,7 @@ object classes: %s, all available attrs: %s""" % (
         """
         log.debug("Deleting '%s' recursive=%s" % (self.dn, recursive))
         if self.isnew():
-            raise Exception, "Can't delete empty object"
+            raise exceptions.DeleteOnNew("Can't delete empty object")
         else:
             # we got recursive delete so we first delete all children objects
             if recursive:
@@ -565,8 +565,6 @@ object classes: %s, all available attrs: %s""" % (
                 return '%s,%s' % (self._generate_rdn(), self._parent)
             elif self._dn:
                 return self._dn
-            else:
-                raise Exception("Object dn and parent dn not set!")
         return locals()
     dn = property(**dn())
 
@@ -575,10 +573,7 @@ object classes: %s, all available attrs: %s""" % (
         """Change LDAP password
         """
         #TODO add check if object has password field or implement PasswordField
-        if self._olddn:
-            self.directory(self._olddn, oldpass, newpass)
-        else:
-            self.directory.passwd(self.dn, oldpass, newpass)
+        self.directory.passwd(self._ldap_dn(), oldpass, newpass)
 
 
 class Model(_Model):

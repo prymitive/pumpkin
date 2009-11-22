@@ -7,7 +7,8 @@ from pumpkin import resource
 from pumpkin.filters import eq
 from pumpkin.fields import *
 from pumpkin.base import Model
-from pumpkin.models import PosixGroup, PosixUser
+from pumpkin.models import PosixGroup, PosixUser, Unit
+from pumpkin import exceptions
 
 import nose
 import unittest
@@ -23,7 +24,7 @@ class QA(Model):
     _object_class_ = ['posixAccount', 'inetOrgPerson']
     _rdn_ = ['string', 'uid', 'string_list']
     uid = StringField('uid')
-    string = StringField('cn')
+    string = StringField('cn', lazy=True)
     string_list = StringListField('mail')
     integer = IntegerField('uidNumber')
     integer_list = IntegerListField('mobile')
@@ -35,6 +36,7 @@ class QA(Model):
     bool = BooleanField('initials')
     attrdel = StringField('departmentNumber')
     binary = BinaryField('userCertificate', binary=True)
+    lazy_binary = BinaryField('userCertificate', binary=True, lazy=True)
     missing = StringField('employeeType', default='defaultValue123')
     dtime = DatetimeField('gidNumber')
     dict_field = DictField('carLicense')
@@ -43,12 +45,29 @@ class QA(Model):
         """Simple fget function for 'custom_func' field
         """
         return self.custom_func_value
-    
+
     def _custom_func_fset(self, value):
         """Simple fset function for 'custom_func' field
         """
         self.custom_func_value = value
         #FIXME unsafe
+
+    def _hook_pre_update(self):
+        """Test hook
+        """
+        pass
+
+
+class BrokenModel(Model):
+    """Invalid model
+    """
+    _object_class_ = ['invalidClass']
+    _rdn_ = 'name'
+    name = StringField('invalidAttribute')
+
+
+class BrokenRDN(QA):
+    _rdn_ = ['invalid', 'attr']
 
 
 qa = QA(LDAP_CONN, 'cn=Max Blank,ou=users,dc=company,dc=com')
@@ -74,9 +93,9 @@ class Test(unittest.TestCase):
         print('Model fields: %s' %  qa._get_fields().keys())
         self.assertEqual(qa._get_fields().keys(), [
             'binary', 'attrdel', 'uid', 'missing', 'dtime', 'string_rw',
-            'dict_field', 'string_list', 'integer_ro', 'bool', 'integer_list',
-            'integer', 'string_default', 'object_class', 'string', 'custom_func'
-            ]
+            'dict_field', 'string_list', 'integer_ro', 'bool', 'lazy_binary', 
+            'integer_list', 'integer', 'string_default', 'object_class',
+            'string', 'custom_func']
         )
 
     def test_string(self):
@@ -201,7 +220,11 @@ class Test(unittest.TestCase):
 
         pg2 = PosixGroup(LDAP_CONN, pg.dn)
         pg2.name = u'test_rename_after'
+        pg2.update()
+        self.assertEqual(pg2.name, u'test_rename_before')
+        pg2.name = u'test_rename_after'
         pg2.save()
+        self.assertEqual(pg2.dn, 'cn=test_rename_after,dc=company,dc=com')
         pg2.delete()
 
     def test_hook_posixgroup(self):
@@ -310,6 +333,23 @@ class Test(unittest.TestCase):
         pu.update()
         self.assertEqual(pu.binary, None)
 
+
+    def test_lazy_binary(self):
+        """Test reading / writing to lazy field with binary transfer
+        """
+        pu = QA(LDAP_CONN, 'cn=test_binary,ou=users,dc=company,dc=com')
+        file = open('test/root.der', 'rb')
+        pu.binary = file.read()
+        file.close()
+        pu.save()
+        pu.update()
+        self.assertNotEqual(pu.binary, None)
+        del pu.binary
+        pu.save()
+        pu.update()
+        self.assertEqual(pu.binary, None)
+
+
     def test_default(self):
         """Test settings default value for missing attributes
         """
@@ -391,3 +431,72 @@ class Test(unittest.TestCase):
         """
         res = resource.LDAPResource()
         res.sasl_method = '9999'
+
+
+    def test_ldap_attributes(self):
+        """Test listing ldap attributes used by model
+        """
+        self.assertEqual(qa.ldap_attributes(lazy=False), [
+            'userCertificate', 'departmentNumber', 'uid', 'employeeType',
+            'gidNumber', 'description', 'carLicense', 'mail', 'gidNumber',
+            'initials', 'mobile', 'uidNumber', 'homeDirectory', 'objectClass',
+            'sn']
+        )
+        self.assertEqual(qa.ldap_attributes(lazy=True), [
+            'userCertificate', 'departmentNumber', 'uid', 'employeeType',
+            'gidNumber', 'description', 'carLicense', 'mail', 'gidNumber',
+            'initials', 'userCertificate', 'mobile', 'uidNumber',
+            'homeDirectory', 'objectClass', 'cn', 'sn']
+        )
+
+
+    @nose.tools.raises(exceptions.SchemaValidationError)
+    def test_invalid_model(self):
+        """Test exceptions on invalid model
+        """
+        inv = BrokenModel(LDAP_CONN)
+
+
+    @nose.tools.raises(exceptions.ModelNotMatched)
+    def test_model_match(self):
+        """Test exceptions on model instance created with dn not matching model
+        """
+        inv = QA(LDAP_CONN, 'cn=nazwa,ou=groups,dc=company,dc=com')
+
+
+    @nose.tools.raises(exceptions.InvalidModel)
+    def test_model_rdn(self):
+        """Test exceptions on model with nonexisting _rdn_ items
+        """
+        inv = BrokenRDN(LDAP_CONN)
+
+
+    def test_recursive_delete(self):
+        """Test recursive delete on object
+        """
+        try:
+            ou = Unit(LDAP_CONN,  "ou=unit1,%s" % LDAP_CONN.get_basedn())
+            ou.delete(recursive=True)
+        except:
+            pass
+
+        for i in range(1, 10):
+            ou = Unit(LDAP_CONN)
+            if i > 1:
+                parent = u"ou=unit1,%s" % LDAP_CONN.get_basedn()
+                for j in range(2, i):
+                    parent = u"ou=unit%d,%s" % (j, parent)
+                ou.set_parent(parent)
+            ou.name = u"unit%d" % i
+            ou.save()
+
+        ou = Unit(LDAP_CONN,  "ou=unit1,%s" % LDAP_CONN.get_basedn())
+        ou.delete(recursive=True)
+
+
+    @nose.tools.raises(exceptions.DeleteOnNew)
+    def test_delete_new(self):
+        """Test exceptions when calling delete() on new object
+        """
+        obj = QA(LDAP_CONN)
+        obj.delete()
