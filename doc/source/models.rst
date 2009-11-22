@@ -93,4 +93,4 @@ be run after :meth:`~pumpkin.base.Model.delete` we need to define:
 
   >>> class MyModel(Model):
   >>>   def _hook_post_delete(self)
-  >>>     [do somethin]
+  >>>     [do something]
