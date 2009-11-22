@@ -482,3 +482,24 @@ class Test(unittest.TestCase):
         """
         obj = QA(LDAP_CONN)
         obj.delete()
+
+
+    def test_objectlist(self):
+        """Test objectlist methods
+        """
+        users = LDAP_CONN.search(PosixUser)
+        user = users.by_dn("cn=Max Blank,ou=users,dc=company,dc=com")
+        self.assertEqual(user.dn, "cn=Max Blank,ou=users,dc=company,dc=com")
+        user = users.with_attr('shell')[0]
+        self.assertEqual(user.dn, "cn=Max Blank,ou=users,dc=company,dc=com")
+        user = users.by_dn("cn=InvalidDN,dc=company,dc=com")
+        self.assertEqual(user, None)
+        s = users.pickle()
+        self.assertNotEqual(s, None)
+
+
+    @nose.tools.raises(exceptions.ObjectNotFound)
+    def test_invalid_dn(self):
+        """Test exception on creating model instance with invalid dn
+        """
+        inv = QA(LDAP_CONN, "cn=InvalidDN,dc=company,dc=com")
