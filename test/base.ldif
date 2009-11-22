@@ -54,7 +54,7 @@ uid: test_binary
 dn: cn=Max Blank,ou=users,dc=company,dc=com
 homeDirectory: /home/users/max.blank
 loginShell: /bin/sh
-userPassword: {SSHA}RT5M7e3HF/pbJU1Vd9tyvCy1zkGzWCd0
+userPassword: {SSHA}5/CBMF81cAljuCt7egrHCHc8rpfFX4W5
 uid: max.blank
 objectClass: inetOrgPerson
 objectClass: posixAccount
@@ -68,7 +68,7 @@ mail: max@blank.com
 mail: max.blank@blank.com
 initials: True
 cn: Max Blank
-description:: xITEhsW5xJjFu8WBw5MgU3VuIE5vdiAgMSAyMDo0OTozNCAyMDA5
+description:: xITEhsW5xJjFu8WBw5MgU3VuIE5vdiAyMiAyMzoyMjozNSAyMDA5
 
 dn: cn=test_binary,ou=users,dc=company,dc=com
 homeDirectory: /home/users/test
@@ -90,11 +90,12 @@ objectClass: posixAccount
 objectClass: top
 sn: datetime
 uidNumber: 10
-gidNumber: 1257104974
+gidNumber: 1258928555
 cn: test_datetime
 
 dn: cn=test_dict,ou=users,dc=company,dc=com
 homeDirectory: /home/users/test
+givenName:: xITEhsSY
 uid: test_dict
 objectClass: inetOrgPerson
 objectClass: posixAccount
@@ -103,3 +104,4 @@ sn: dict
 uidNumber: 11
 gidNumber: 941
 cn: test_dict
+
