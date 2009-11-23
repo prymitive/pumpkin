@@ -10,13 +10,15 @@ from pumpkin.base import Model
 from pumpkin.models import PosixGroup, PosixUser, Unit
 from pumpkin import exceptions
 from pumpkin.serialize import pickle_object, unpickle_object
+from pumpkin import resource
+from pumpkin.directory import Directory
 
 import nose
 import unittest
 import time
 import datetime
 
-from conn import LDAP_CONN
+from conn import LDAP_CONN, ANON_CONN, SERVER, BASEDN
 
 
 class QA(Model):
@@ -641,3 +643,59 @@ class Test(unittest.TestCase):
         """
         qa.update()
         self.assertTrue(qa.hook_done)
+
+
+    def test_anon_conn(self):
+        """Test anonymous connection to LDAP
+        """
+        self.assertNotEqual(ANON_CONN.search(PosixUser), [])
+
+
+    def test_sasl_auth_digestmd5(self):
+        """Test sasl authentication
+        """
+        res = resource.LDAPResource()
+        res.server = SERVER
+        res.basedn = BASEDN
+        res.auth_method = resource.AUTH_SASL
+        res.sasl_method = resource.DIGEST_MD5
+        res.login = 'max.blank'
+        res.password = 'pass123'
+
+        conn = Directory()
+        conn.connect(res)
+        self.assertTrue(conn.isconnected())
+        conn.disconnect()
+
+
+    def test_sasl_auth_digestmd5(self):
+        """Test sasl authentication
+        """
+        res = resource.LDAPResource()
+        res.server = SERVER
+        res.basedn = BASEDN
+        res.auth_method = resource.AUTH_SASL
+        res.sasl_method = resource.CRAM_MD5
+        res.login = 'max.blank'
+        res.password = 'pass123'
+
+        conn = Directory()
+        conn.connect(res)
+        self.assertTrue(conn.isconnected())
+        conn.disconnect()
+
+
+    @nose.tools.raises(ValueError)
+    def test_invalid_auth_method(self):
+        """Test setting invalid auth method
+        """
+        res = resource.LDAPResource()
+        res.auth_method = 'f33'
+
+
+    @nose.tools.raises(ValueError)
+    def test_invalid_sasl_method(self):
+        """Test setting invalid sasl auth method
+        """
+        res = resource.LDAPResource()
+        res.sasl_method = 'f33'

@@ -139,16 +139,12 @@ class Directory(object):
                         self._resource.login,
                         self._resource.password
                     )
-                else:
-                    raise exceptions.ResourceError('Unknown SASL method')
                 log.debug("Performing SIMPLE BIND operation to '%s'" %
                     self._resource.server)
                 self._ldapconn.sasl_interactive_bind_s("", auth_tokens)
             else:
                 raise exceptions.ResourceError(
                     'python-ldap is built without sasl support')
-        else:
-            raise exceptions.ResourceError("Unknown authorization method")
 
         self._connected = True
 

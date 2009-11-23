@@ -54,7 +54,7 @@ uid: test_binary
 dn: cn=Max Blank,ou=users,dc=company,dc=com
 homeDirectory: /home/users/max.blank
 loginShell: /bin/sh
-userPassword: {SSHA}9F0Foh2++71+Oi9EmdnjgW6vRySkbJug
+userPassword: pass123
 uid: max.blank
 objectClass: inetOrgPerson
 objectClass: posixAccount
