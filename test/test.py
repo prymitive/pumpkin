@@ -57,12 +57,12 @@ class QA(Model):
     def _custom_func_fdel(self):
         """Simple fdel function for 'custom_func' field
         """
-        pass
+        raise IOError("custom fdel")
 
     def _hook_pre_update(self):
         """Test hook
         """
-        pass
+        self.hook_done = True
 
 
 class BrokenModel(Model):
@@ -169,6 +169,12 @@ class Test(unittest.TestCase):
         """
         qa.custom_func = u'New custom set value'
         self.assertEqual(qa.custom_func, u'New custom set value')
+
+    @nose.tools.raises(IOError)
+    def test_custrom_del(self):
+        """Test deleting field with custom del method
+        """
+        del qa.custom_func
 
     def test_create_object(self):
         """Test creating new object, removing single attribute, deleting object
@@ -626,3 +632,10 @@ class Test(unittest.TestCase):
         """
         user = PosixUser(LDAP_CONN)
         user.save()
+
+
+    def test_hook(self):
+        """Test hook method
+        """
+        qa.update()
+        self.assertTrue(qa.hook_done)
