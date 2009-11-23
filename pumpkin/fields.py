@@ -9,6 +9,13 @@ Created on 2009-06-08
 
 import time
 import datetime
+import logging
+
+from pumpkin.debug import PUMPKIN_LOGLEVEL
+
+
+logging.basicConfig(level=PUMPKIN_LOGLEVEL)
+log = logging.getLogger(__name__)
 
 
 def unique_list(values):
@@ -69,7 +76,8 @@ class Field(object):
 
         if kwargs.has_key('default'):
             self.default = kwargs.get('default')
-
+            log.debug("New default value '%s' for field '%s'" % (
+                self.default, self.attr))
 
     def decode2local(self, values, instance=None):
         """Returns field value decoded to local field type, if field represents
@@ -78,7 +86,7 @@ class Field(object):
            This base field is just returning value as is (str).        
         """
         return values
-    
+
     def encode2str(self, values, instance=None):
         """Returns field value encoded to type that is parsable by python-ldap
            (list of str values). If any field is storing attribute value
@@ -106,6 +114,8 @@ class Field(object):
         """
         value = instance._get_attr(self.attr, binary=self.binary)
         if value is None:
+            log.debug("Field '%s' value is None, returning default '%s'" % (
+                self.attr, self.default))
             return self.default
         else:
             return self.decode2local(value, instance=instance)
@@ -170,7 +180,7 @@ class StringField(StringListField):
         """Returns str value
         """
         return StringListField.encode2str(self, [values])
-    
+
     def decode2local(self, values, instance=None):
         """Return unicode value
         """
@@ -194,7 +204,7 @@ class IntegerListField(Field):
             return values
         else:
             raise ValueError, "Not a list of int values: %s" % values
-    
+
     def decode2local(self, values, instance=None):
         """Returns list of int
         """
@@ -218,13 +228,12 @@ class IntegerField(IntegerListField):
             return values
         else:
             raise ValueError("Not a int value: %s" % values)
-    
-    
+
     def encode2str(self, values, instance=None):
         """Returns str value
         """
         return IntegerListField.encode2str(self, [values])
-    
+
     def decode2local(self, values, instance=None):
         """Returns int value
         """
@@ -235,7 +244,6 @@ class IntegerField(IntegerListField):
 class BooleanField(Field):
     """Boolean field
     """
-
     def __init__(self, name, **kwargs):
         """
         @ivar true: str representing True, this str will be saved to LDAP if
@@ -279,7 +287,6 @@ class BooleanField(Field):
 class BinaryField(Field):
     """Single valued binary field
     """
-
     def decode2local(self, values, instance=None):
         """Return single value
         """
@@ -290,7 +297,6 @@ class BinaryField(Field):
 class DatetimeField(Field):
     """Single valued datetime field
     """
-
     def validate(self, values):
         """Check if value is valid datetime instance
         """

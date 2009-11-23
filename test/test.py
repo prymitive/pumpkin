@@ -114,11 +114,6 @@ class Test(unittest.TestCase):
         """
         self.assertEqual(qa.integer, 1000)
 
-    def test_string_default(self):
-        """Test reading read-only string with default value
-        """
-        self.assertEqual(qa.string_default, '/')
-
     def test_string_write(self):
         """Test writing value to a string
         """
@@ -158,7 +153,7 @@ class Test(unittest.TestCase):
         pg.remove_member(3)
         pg.set_parent('ou=groups,dc=company,dc=com')
         pg.save()
-        
+
         self.assertEqual(pg.dn, 'cn=Test group,ou=groups,dc=company,dc=com')
 
         del pg.members
@@ -549,3 +544,62 @@ class Test(unittest.TestCase):
         users = LDAP_CONN.search(
             PosixUser, search_filter=opnot(eq(PosixUser.fullname, u"NotFound")))
         self.assertNotEqual(users, [])
+
+
+    def test_posixgroup(self):
+        """Test PosixGroup methods
+        """
+        try:
+            ou = Unit(LDAP_CONN, "ou=posix_group,%s" % LDAP_CONN.get_basedn())
+            ou.delete(recursive=True)
+        except:
+            pass
+
+        ou = Unit(LDAP_CONN)
+        ou.name = u"posix_group"
+        ou.save()
+
+        pu = PosixUser(LDAP_CONN)
+        pu.set_parent(ou.dn)
+        pu.uid = 8361
+        pu.gid = 8245
+        pu.login = u"login"
+        pu.surname = u"Surname"
+        pu.fullname = u"Fullname"
+        pu.home = u"/home"
+        pu.save()
+
+        pg = PosixGroup(LDAP_CONN)
+        pg.set_parent(ou.dn)
+        pg.name = u"group"
+        pg.gid = 45921
+        pg.save()
+
+        for (field,instance) in pg._get_fields().items():
+            print("%s => %s" % (field, instance.default))
+
+        self.assertFalse(pg.ismember(pu.uid))
+
+        pg.add_member(pu.uid)
+
+        for (field,instance) in pg._get_fields().items():
+            print("%s => %s" % (field, instance.default))
+
+
+        pg.save()
+
+        for (field,instance) in pg._get_fields().items():
+            print("%s => %s" % (field, instance.default))
+
+        pg.update()
+        pu.update()
+
+        self.assertEqual(pu.gid, pg.gid)
+        self.assertRaises(ValueError, pg.remove_member, 1)
+
+        pg.remove_member(pu.uid)
+        pg.save()
+        print pg.members
+        pg.update()
+        print pg.members
+        #self.assertFalse(pg.ismember(pu.uid))
