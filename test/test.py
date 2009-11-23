@@ -625,6 +625,8 @@ class Test(unittest.TestCase):
         pg.update()
         self.assertFalse(pg.ismember(pu.uid))
 
+        ou.delete(recursive=True)
+
 
     @nose.tools.raises(exceptions.FieldValueMissing)
     def test_incomplete_save(self):
