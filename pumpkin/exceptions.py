@@ -73,6 +73,10 @@ class ConstraintViolation(Exception):
     """Constraint violation (low password quality etc)
     """
 
+class DeleteOnNew(Exception):
+    """Can't remove new object that was not saved to LDAP
+    """
+
 def desc(err):
     """Return ldap exception description if present
     """

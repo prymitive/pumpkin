@@ -8,7 +8,7 @@ Created on 2009-06-11
 
 
 import logging
-from functools import wraps, partial
+from functools import wraps
 
 from pumpkin.debug import PUMPKIN_LOGLEVEL
 from pumpkin.fields import Field, StringListField
@@ -85,7 +85,7 @@ class _model(type):
                     fget_func = adict[fget_name]
                 else:
                     fget_func = value.fget
-    
+
                 # we check if custom fset is also present, but only for 
                 # non-readonly Fields
                 if not value.readonly:
@@ -96,11 +96,7 @@ class _model(type):
                         fset_func = value.fset
                 else:
                     fset_func = None
-                    # partial is needed so we won't get any scope problems
-                    # because value changes on every iteration
-                    if value.default:
-                        fget_func = partial(lambda self, x: x.default, x=value)
-    
+
                 setattr(cls, key, property(
                     fget=fget_func,
                     fset=fset_func,
@@ -212,7 +208,7 @@ class _Model(object):
         it will be used for contacting LDAP database, dn is distinguished name
         of object that will be mapped to Model instance, if dn is None then
         empty instance will be created
-        
+
         @param directory: LDAP directory instance used for lookups
         @param dn: LDAP object distinguished name
         @param attrs: dict with already fetch attributes, used when creating
@@ -315,6 +311,7 @@ object classes: %s, all available attrs: %s""" % (
     def _store_attr(self, attr, value):
         """Store attribute in local storage
         """
+        log.debug("Storing attribute '%s' with value '%s'" % (attr, value))
         self._storage[attr] = value
 
     def _get_attr(self, attr, binary=False):
@@ -323,10 +320,9 @@ object classes: %s, all available attrs: %s""" % (
         """
         if self._isstored(attr):
             value = self._storage.get(attr)
-            if value in [[], '']:
-                return None
-            else:
-                return value
+            log.debug("Returning localy stored value '%s' for attribute '%s'" % (
+                value, attr))
+            return value
         elif self.isnew():
             return None
         else:
@@ -345,7 +341,7 @@ object classes: %s, all available attrs: %s""" % (
     def _set_attr(self, attr, value):
         """Set attribute value in local storage, it will be saved to LDAP after
         calling save()
-        
+
         @param attr: attribute name
         @param value: new value for attribute
         """
@@ -536,7 +532,7 @@ object classes: %s, all available attrs: %s""" % (
         """
         log.debug("Deleting '%s' recursive=%s" % (self.dn, recursive))
         if self.isnew():
-            raise Exception, "Can't delete empty object"
+            raise exceptions.DeleteOnNew("Can't delete empty object")
         else:
             # we got recursive delete so we first delete all children objects
             if recursive:
@@ -565,8 +561,6 @@ object classes: %s, all available attrs: %s""" % (
                 return '%s,%s' % (self._generate_rdn(), self._parent)
             elif self._dn:
                 return self._dn
-            else:
-                raise Exception("Object dn and parent dn not set!")
         return locals()
     dn = property(**dn())
 
@@ -575,10 +569,7 @@ object classes: %s, all available attrs: %s""" % (
         """Change LDAP password
         """
         #TODO add check if object has password field or implement PasswordField
-        if self._olddn:
-            self.directory(self._olddn, oldpass, newpass)
-        else:
-            self.directory.passwd(self.dn, oldpass, newpass)
+        self.directory.passwd(self._ldap_dn(), oldpass, newpass)
 
 
 class Model(_Model):

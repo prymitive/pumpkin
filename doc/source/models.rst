@@ -75,3 +75,22 @@ We will create model that maps into *posixGroup* object class:
 >>>   name = StringField('cn')
 >>>   gid = IntegerField('gidNumber')
 >>>   members = IntegerListField('memberUid')
+
+Using hooks
+-----------
+
+Hooks allows to run any code before or after calling one of those methods:
+
+  * :meth:`~pumpkin.base.Model.update`
+  * :meth:`~pumpkin.base.Model.save`
+  * :meth:`~pumpkin.base.Model.delete`
+  * :meth:`~pumpkin.base.Model.passwd`
+
+They are used in :class:`~pumpkin.models.PosixGroup` to keep members gid field 
+(mapped to gidNumber attribute) in sync. To create a hook we need to create
+a method named '_hook_{pre,post}_{method}', for example to create hook what will
+be run after :meth:`~pumpkin.base.Model.delete` we need to define:
+
+  >>> class MyModel(Model):
+  >>>   def _hook_post_delete(self)
+  >>>     [do something]

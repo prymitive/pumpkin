@@ -55,28 +55,28 @@ class PosixGroup(Model):
 
     def _hook_post_save(self):
         """Post save hook needed to keep members gid in sync
+        #TODO only added members are synced, we need to also take care of
+        removed users
         """
         log.debug("Running post save hook for gid '%s'" % self.gid)
-        if self.members:
-            for uid in self.members:
-                log.debug("Post save hook call for uid '%s'" % uid)
-                member = self.directory.get(
-                    PosixUser,
-                    search_filter=eq(PosixUser.uid, uid)
-                )
-                if member:
-                    log.debug("Update gid to '%s' for uid '%s'" % (self.gid, uid))
-                    member.gid = self.gid
-                    member.save()
+        for uid in self.members:
+            log.debug("Post save hook call for uid '%s'" % uid)
+            member = self.directory.get(
+                PosixUser,
+                search_filter=eq(PosixUser.uid, uid)
+            )
+            if not member is None:
+                log.debug("Update gid to '%s' for uid '%s'" % (self.gid, uid))
+                member.gid = self.gid
+                member.save()
 
     def add_member(self, uid):
         """Add given user uid to member list
         """
-        if self.members:
-            if not self.ismember(uid):
-                self.members += [uid]
-        else:
-            self.members = [uid]
+        if not self.ismember(uid):
+            newval = self.members
+            newval.append(uid)
+            self.members = newval
 
     def remove_member(self, uid):
         """Removes given user uid from members list
@@ -86,15 +86,12 @@ class PosixGroup(Model):
             newval.remove(uid)
             self.members = newval
         else:
-            raise Exception('Uid %s not found in group %s' % (uid, self.dn))
+            raise ValueError('Uid %s not found in group %s' % (uid, self.dn))
 
     def ismember(self, uid):
         """Return True if given uid is member of this group.
         """
-        if self.members and uid in self.members:
-            return True
-        else:
-            return False
+        return uid in self.members
 
 
 class GroupOfNames(Model):

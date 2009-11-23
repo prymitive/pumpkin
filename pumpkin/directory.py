@@ -339,7 +339,8 @@ class Directory(object):
                 if oc.lower() == name.lower():
                     return obj
         else:
-             raise Exception("Object class '%s' not found in schema" % oc)
+             raise exceptions.SchemaValidationError(
+                "Object class '%s' not found in schema" % oc)
 
     def _get_objectclass_attrs(self, oc):
         """Returns all object class attributes ([required], [additional])
