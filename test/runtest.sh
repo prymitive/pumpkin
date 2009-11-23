@@ -27,7 +27,7 @@ checkret "Can't import base.ldif into openldap server"
 slaptest -f "$SLAPDCONF"
 checkret "Broken slapd.conf, exiting"
 
-$SLAPD -f "$SLAPDCONF" -h ldap://localhost:1389 &
+$SLAPD -f "$SLAPDCONF" -h ldap://localhost:1389
 SLAPD_PID=`ps aux | grep slapd | grep "$SLAPDCONF" | grep -v grep | awk '{print $2}'`
 
 echo "Openldap server ready"
@@ -40,5 +40,11 @@ nosetests \
 --with-doctest \
 ./test/test.py
 
-kill $SLAPD_PID
+if [ "$SLAPD_PID" != "" ]; then
+    kill -s 9 $SLAPD_PID
+else
+    if [ "$(pidof slapd)" != "" ]; then
+        echo "slapd still running, kill it manualy"
+    fi
+fi
 rm -fr "$DBDIR"/*
