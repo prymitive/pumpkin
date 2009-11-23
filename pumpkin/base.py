@@ -500,7 +500,8 @@ object classes: %s, all available attrs: %s""" % (
         non-empty it will write all attributes to LDAP
         """
         if self.missing_fields() != []:
-            raise Exception("Can't save when required fields are missing: %s" %
+            raise exceptions.FieldValueMissing(
+                "Can't save when required fields are missing: %s" %
                 self.missing_fields())
 
         if self.isnew():

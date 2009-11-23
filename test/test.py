@@ -27,6 +27,7 @@ class QA(Model):
     uid = StringField('uid')
     string = StringField('cn', lazy=True)
     string_list = StringListField('mail')
+    string_list_write = StringListField('street')
     integer = IntegerField('uidNumber')
     integer_list = IntegerListField('mobile')
     integer_ro =  IntegerField('gidNumber', readonly=True)
@@ -52,6 +53,11 @@ class QA(Model):
         """
         self.custom_func_value = value
         #FIXME unsafe
+
+    def _custom_func_fdel(self):
+        """Simple fdel function for 'custom_func' field
+        """
+        pass
 
     def _hook_pre_update(self):
         """Test hook
@@ -85,34 +91,25 @@ class Test(unittest.TestCase):
                          [u'inetOrgPerson', u'posixAccount', u'top'])
 
     def test_private_class(self):
+        """Test listing object classes used by model
+        """
         self.assertEqual(
             qa.private_classes(), ['posixAccount', 'inetOrgPerson'])
 
     def test_fields(self):
+        """Test model fields list
+        """
         self.assertEqual(qa._get_fields().keys(), [
             'binary', 'attrdel', 'uid', 'missing', 'dtime', 'string_rw',
-            'dict_field', 'string_list', 'integer_ro', 'bool', 'lazy_binary', 
-            'integer_list', 'integer', 'string_default', 'object_class',
-            'string', 'custom_func']
+            'dict_field', 'string_list', 'integer_ro', 'string_list_write',
+            'bool', 'lazy_binary', 'integer_list', 'integer', 'string_default',
+            'object_class', 'string', 'custom_func']
         )
 
     def test_string(self):
         """Test reading cached string
         """
         self.assertEqual(qa.string, u'Max Blank')
-
-    def test_string_list(self):
-        """Test reading list of strings
-        """
-        self.assertEqual(
-            qa.string_list,
-            [u'max@blank.com', u'max.blank@blank.com']
-        )
-
-    def test_integer(self):
-        """Test reading integer
-        """
-        self.assertEqual(qa.integer, 1000)
 
     def test_string_write(self):
         """Test writing value to a string
@@ -122,6 +119,40 @@ class Test(unittest.TestCase):
         qa.save()
         self.assertEqual(qa.string_rw, desc)
         qa.string_rw = u'Opis'
+
+    def test_string_list(self):
+        """Test reading list of strings
+        """
+        self.assertEqual(
+            qa.string_list,
+            [u'max@blank.com', u'max.blank@blank.com']
+        )
+
+    def test_string_list_write(self):
+        """Test writing value to a list of strings
+        """
+        qa.update()
+        org = qa.string_list_write
+
+        qa.string_list_write = [u'a', u'c', u'b']
+        qa.save()
+        qa.update()
+        self.assertEqual(qa.string_list_write, [u'a', u'c', u'b'])
+
+        qa.string_list_write = org
+        qa.save()
+        self.assertEqual(qa.string_list_write, org)
+
+    @nose.tools.raises(ValueError)
+    def test_string_list_write_invalid(self):
+        """Test excepion on invalid value passed to StringListField
+        """
+        qa.string_list_write = [1]
+
+    def test_integer(self):
+        """Test reading integer
+        """
+        self.assertEqual(qa.integer, 1000)
 
     def test_integer_list(self):
         """Test reading list of integers
@@ -417,13 +448,13 @@ class Test(unittest.TestCase):
         self.assertEqual(qa.ldap_attributes(lazy=False), [
             'userCertificate', 'departmentNumber', 'uid', 'employeeType',
             'gidNumber', 'description', 'carLicense', 'mail', 'gidNumber',
-            'initials', 'mobile', 'uidNumber', 'homeDirectory', 'objectClass',
-            'sn']
+            'street', 'initials', 'mobile', 'uidNumber', 'homeDirectory',
+            'objectClass', 'sn']
         )
         self.assertEqual(qa.ldap_attributes(lazy=True), [
             'userCertificate', 'departmentNumber', 'uid', 'employeeType',
             'gidNumber', 'description', 'carLicense', 'mail', 'gidNumber',
-            'initials', 'userCertificate', 'mobile', 'uidNumber',
+            'street', 'initials', 'userCertificate', 'mobile', 'uidNumber',
             'homeDirectory', 'objectClass', 'cn', 'sn']
         )
 
@@ -587,3 +618,11 @@ class Test(unittest.TestCase):
         pg.save()
         pg.update()
         self.assertFalse(pg.ismember(pu.uid))
+
+
+    @nose.tools.raises(exceptions.FieldValueMissing)
+    def test_incomplete_save(self):
+        """Test calling save() when required fields are missing
+        """
+        user = PosixUser(LDAP_CONN)
+        user.save()

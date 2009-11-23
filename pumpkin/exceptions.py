@@ -77,6 +77,10 @@ class DeleteOnNew(Exception):
     """Can't remove new object that was not saved to LDAP
     """
 
+class FieldValueMissing(Exception):
+    """save() called when required fields are missing
+    """
+
 def desc(err):
     """Return ldap exception description if present
     """
