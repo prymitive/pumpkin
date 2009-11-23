@@ -207,9 +207,9 @@ class Test(unittest.TestCase):
     def test_search(self):
         """Test searching for objects
         """
-        self.assertEqual(
-            LDAP_CONN.search(QA)[0].dn,
-            'cn=Max Blank,ou=users,dc=company,dc=com'
+        self.assertEqual(LDAP_CONN.search(
+            QA, search_filter=eq(QA.string, u"Max Blank"))[0].dn,
+                'cn=Max Blank,ou=users,dc=company,dc=com'
         )
 
     def test_move(self):
