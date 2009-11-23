@@ -574,32 +574,16 @@ class Test(unittest.TestCase):
         pg.name = u"group"
         pg.gid = 45921
         pg.save()
-
-        for (field,instance) in pg._get_fields().items():
-            print("%s => %s" % (field, instance.default))
-
         self.assertFalse(pg.ismember(pu.uid))
 
         pg.add_member(pu.uid)
-
-        for (field,instance) in pg._get_fields().items():
-            print("%s => %s" % (field, instance.default))
-
-
         pg.save()
-
-        for (field,instance) in pg._get_fields().items():
-            print("%s => %s" % (field, instance.default))
-
         pg.update()
         pu.update()
-
         self.assertEqual(pu.gid, pg.gid)
         self.assertRaises(ValueError, pg.remove_member, 1)
 
         pg.remove_member(pu.uid)
         pg.save()
-        print pg.members
         pg.update()
-        print pg.members
-        #self.assertFalse(pg.ismember(pu.uid))
+        self.assertFalse(pg.ismember(pu.uid))
