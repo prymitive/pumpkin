@@ -10,6 +10,7 @@ Created on 2009-06-08
 import time
 import datetime
 import logging
+import copy
 
 from pumpkin.debug import PUMPKIN_LOGLEVEL
 
@@ -116,7 +117,7 @@ class Field(object):
         if value is None:
             log.debug("Field '%s' value is None, returning default '%s'" % (
                 self.attr, self.default))
-            return self.default
+            return copy.deepcopy(self.default)
         else:
             return self.decode2local(value, instance=instance)
 

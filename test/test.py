@@ -10,13 +10,15 @@ from pumpkin.base import Model
 from pumpkin.models import PosixGroup, PosixUser, Unit
 from pumpkin import exceptions
 from pumpkin.serialize import pickle_object, unpickle_object
+from pumpkin import resource
+from pumpkin.directory import Directory
 
 import nose
 import unittest
 import time
 import datetime
 
-from conn import LDAP_CONN
+from conn import LDAP_CONN, ANON_CONN, SERVER, BASEDN
 
 
 class QA(Model):
@@ -27,6 +29,7 @@ class QA(Model):
     uid = StringField('uid')
     string = StringField('cn', lazy=True)
     string_list = StringListField('mail')
+    string_list_write = StringListField('street')
     integer = IntegerField('uidNumber')
     integer_list = IntegerListField('mobile')
     integer_ro =  IntegerField('gidNumber', readonly=True)
@@ -53,10 +56,15 @@ class QA(Model):
         self.custom_func_value = value
         #FIXME unsafe
 
+    def _custom_func_fdel(self):
+        """Simple fdel function for 'custom_func' field
+        """
+        raise IOError("custom fdel")
+
     def _hook_pre_update(self):
         """Test hook
         """
-        pass
+        self.hook_done = True
 
 
 class BrokenModel(Model):
@@ -85,34 +93,25 @@ class Test(unittest.TestCase):
                          [u'inetOrgPerson', u'posixAccount', u'top'])
 
     def test_private_class(self):
+        """Test listing object classes used by model
+        """
         self.assertEqual(
             qa.private_classes(), ['posixAccount', 'inetOrgPerson'])
 
     def test_fields(self):
+        """Test model fields list
+        """
         self.assertEqual(qa._get_fields().keys(), [
             'binary', 'attrdel', 'uid', 'missing', 'dtime', 'string_rw',
-            'dict_field', 'string_list', 'integer_ro', 'bool', 'lazy_binary', 
-            'integer_list', 'integer', 'string_default', 'object_class',
-            'string', 'custom_func']
+            'dict_field', 'string_list', 'integer_ro', 'string_list_write',
+            'bool', 'lazy_binary', 'integer_list', 'integer', 'string_default',
+            'object_class', 'string', 'custom_func']
         )
 
     def test_string(self):
         """Test reading cached string
         """
         self.assertEqual(qa.string, u'Max Blank')
-
-    def test_string_list(self):
-        """Test reading list of strings
-        """
-        self.assertEqual(
-            qa.string_list,
-            [u'max@blank.com', u'max.blank@blank.com']
-        )
-
-    def test_integer(self):
-        """Test reading integer
-        """
-        self.assertEqual(qa.integer, 1000)
 
     def test_string_write(self):
         """Test writing value to a string
@@ -122,6 +121,40 @@ class Test(unittest.TestCase):
         qa.save()
         self.assertEqual(qa.string_rw, desc)
         qa.string_rw = u'Opis'
+
+    def test_string_list(self):
+        """Test reading list of strings
+        """
+        self.assertEqual(
+            qa.string_list,
+            [u'max@blank.com', u'max.blank@blank.com']
+        )
+
+    def test_string_list_write(self):
+        """Test writing value to a list of strings
+        """
+        qa.update()
+        org = qa.string_list_write
+
+        qa.string_list_write = [u'a', u'c', u'b']
+        qa.save()
+        qa.update()
+        self.assertEqual(qa.string_list_write, [u'a', u'c', u'b'])
+
+        qa.string_list_write = org
+        qa.save()
+        self.assertEqual(qa.string_list_write, org)
+
+    @nose.tools.raises(ValueError)
+    def test_string_list_write_invalid(self):
+        """Test excepion on invalid value passed to StringListField
+        """
+        qa.string_list_write = [1]
+
+    def test_integer(self):
+        """Test reading integer
+        """
+        self.assertEqual(qa.integer, 1000)
 
     def test_integer_list(self):
         """Test reading list of integers
@@ -138,6 +171,12 @@ class Test(unittest.TestCase):
         """
         qa.custom_func = u'New custom set value'
         self.assertEqual(qa.custom_func, u'New custom set value')
+
+    @nose.tools.raises(IOError)
+    def test_custrom_del(self):
+        """Test deleting field with custom del method
+        """
+        del qa.custom_func
 
     def test_create_object(self):
         """Test creating new object, removing single attribute, deleting object
@@ -170,9 +209,9 @@ class Test(unittest.TestCase):
     def test_search(self):
         """Test searching for objects
         """
-        self.assertEqual(
-            LDAP_CONN.search(QA)[0].dn,
-            'cn=Max Blank,ou=users,dc=company,dc=com'
+        self.assertEqual(LDAP_CONN.search(
+            QA, search_filter=eq(QA.string, u"Max Blank"))[0].dn,
+                'cn=Max Blank,ou=users,dc=company,dc=com'
         )
 
     def test_move(self):
@@ -417,13 +456,13 @@ class Test(unittest.TestCase):
         self.assertEqual(qa.ldap_attributes(lazy=False), [
             'userCertificate', 'departmentNumber', 'uid', 'employeeType',
             'gidNumber', 'description', 'carLicense', 'mail', 'gidNumber',
-            'initials', 'mobile', 'uidNumber', 'homeDirectory', 'objectClass',
-            'sn']
+            'street', 'initials', 'mobile', 'uidNumber', 'homeDirectory',
+            'objectClass', 'sn']
         )
         self.assertEqual(qa.ldap_attributes(lazy=True), [
             'userCertificate', 'departmentNumber', 'uid', 'employeeType',
             'gidNumber', 'description', 'carLicense', 'mail', 'gidNumber',
-            'initials', 'userCertificate', 'mobile', 'uidNumber',
+            'street', 'initials', 'userCertificate', 'mobile', 'uidNumber',
             'homeDirectory', 'objectClass', 'cn', 'sn']
         )
 
@@ -574,32 +613,89 @@ class Test(unittest.TestCase):
         pg.name = u"group"
         pg.gid = 45921
         pg.save()
-
-        for (field,instance) in pg._get_fields().items():
-            print("%s => %s" % (field, instance.default))
-
         self.assertFalse(pg.ismember(pu.uid))
 
         pg.add_member(pu.uid)
-
-        for (field,instance) in pg._get_fields().items():
-            print("%s => %s" % (field, instance.default))
-
-
         pg.save()
-
-        for (field,instance) in pg._get_fields().items():
-            print("%s => %s" % (field, instance.default))
-
         pg.update()
         pu.update()
-
         self.assertEqual(pu.gid, pg.gid)
         self.assertRaises(ValueError, pg.remove_member, 1)
 
         pg.remove_member(pu.uid)
         pg.save()
-        print pg.members
         pg.update()
-        print pg.members
-        #self.assertFalse(pg.ismember(pu.uid))
+        self.assertFalse(pg.ismember(pu.uid))
+
+        ou.delete(recursive=True)
+
+
+    @nose.tools.raises(exceptions.FieldValueMissing)
+    def test_incomplete_save(self):
+        """Test calling save() when required fields are missing
+        """
+        user = PosixUser(LDAP_CONN)
+        user.save()
+
+
+    def test_hook(self):
+        """Test hook method
+        """
+        qa.update()
+        self.assertTrue(qa.hook_done)
+
+
+    def test_anon_conn(self):
+        """Test anonymous connection to LDAP
+        """
+        self.assertNotEqual(ANON_CONN.search(PosixUser), [])
+
+
+    def test_sasl_auth_digestmd5(self):
+        """Test sasl authentication
+        """
+        res = resource.LDAPResource()
+        res.server = SERVER
+        res.basedn = BASEDN
+        res.auth_method = resource.AUTH_SASL
+        res.sasl_method = resource.DIGEST_MD5
+        res.login = 'max.blank'
+        res.password = 'pass123'
+
+        conn = Directory()
+        conn.connect(res)
+        self.assertTrue(conn.isconnected())
+        conn.disconnect()
+
+
+    def test_sasl_auth_digestmd5(self):
+        """Test sasl authentication
+        """
+        res = resource.LDAPResource()
+        res.server = SERVER
+        res.basedn = BASEDN
+        res.auth_method = resource.AUTH_SASL
+        res.sasl_method = resource.CRAM_MD5
+        res.login = 'max.blank'
+        res.password = 'pass123'
+
+        conn = Directory()
+        conn.connect(res)
+        self.assertTrue(conn.isconnected())
+        conn.disconnect()
+
+
+    @nose.tools.raises(ValueError)
+    def test_invalid_auth_method(self):
+        """Test setting invalid auth method
+        """
+        res = resource.LDAPResource()
+        res.auth_method = 'f33'
+
+
+    @nose.tools.raises(ValueError)
+    def test_invalid_sasl_method(self):
+        """Test setting invalid sasl auth method
+        """
+        res = resource.LDAPResource()
+        res.sasl_method = 'f33'
