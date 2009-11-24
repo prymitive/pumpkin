@@ -652,7 +652,7 @@ class Test(unittest.TestCase):
 
 
     def test_sasl_auth_digestmd5(self):
-        """Test sasl authentication
+        """Test sasl digest md5 authentication
         """
         res = resource.LDAPResource()
         res.server = SERVER
@@ -668,8 +668,8 @@ class Test(unittest.TestCase):
         conn.disconnect()
 
 
-    def test_sasl_auth_digestmd5(self):
-        """Test sasl authentication
+    def test_sasl_auth_crammd5(self):
+        """Test sasl cram md5 authentication
         """
         res = resource.LDAPResource()
         res.server = SERVER
