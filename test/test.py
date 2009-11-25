@@ -75,6 +75,12 @@ class BrokenModel(Model):
     name = StringField('invalidAttribute')
 
 
+class BrokenField(PosixUser):
+    """Invalid field
+    """
+    invalid = StringField('invalidField')
+
+
 class BrokenRDN(QA):
     _rdn_ = ['invalid', 'attr']
 
@@ -357,16 +363,17 @@ class Test(unittest.TestCase):
         """Test reading / writing to lazy field with binary transfer
         """
         pu = QA(LDAP_CONN, 'cn=test_binary,ou=users,dc=company,dc=com')
+        self.assertEqual(pu.lazy_binary, None)
         file = open('test/root.der', 'rb')
-        pu.binary = file.read()
+        pu.lazy_binary = file.read()
         file.close()
         pu.save()
         pu.update()
-        self.assertNotEqual(pu.binary, None)
-        del pu.binary
+        self.assertNotEqual(pu.lazy_binary, None)
+        del pu.lazy_binary
         pu.save()
         pu.update()
-        self.assertEqual(pu.binary, None)
+        self.assertEqual(pu.lazy_binary, None)
 
 
     def test_default(self):
@@ -472,6 +479,14 @@ class Test(unittest.TestCase):
         """Test exceptions on invalid model
         """
         inv = BrokenModel(LDAP_CONN)
+
+
+    @nose.tools.raises(exceptions.SchemaValidationError)
+    def test_invalid_field(self):
+        """Test exceptions on invalid field
+        """
+        inv = BrokenField(LDAP_CONN)
+
 
 
     @nose.tools.raises(exceptions.ModelNotMatched)
