@@ -358,15 +358,15 @@ class Test(unittest.TestCase):
         """
         pu = QA(LDAP_CONN, 'cn=test_binary,ou=users,dc=company,dc=com')
         file = open('test/root.der', 'rb')
-        pu.binary = file.read()
+        pu.lazy_binary = file.read()
         file.close()
         pu.save()
         pu.update()
-        self.assertNotEqual(pu.binary, None)
-        del pu.binary
+        self.assertNotEqual(pu.lazy_binary, None)
+        del pu.lazy_binary
         pu.save()
         pu.update()
-        self.assertEqual(pu.binary, None)
+        self.assertEqual(pu.lazy_binary, None)
 
 
     def test_default(self):
