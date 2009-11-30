@@ -22,8 +22,7 @@ log = logging.getLogger(__name__)
 def unique_list(values):
     """Strip all reapeted values in list
     """
-    ret = set(values)
-    return list(ret)
+    return list(set(values))
 
 
 def check_singleval(name, values):
