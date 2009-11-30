@@ -292,6 +292,9 @@ class Directory(object):
         """
         modlist = []
         for (attr, values) in ldap_attrs.items():
+            if self._resource.server_type == resource.ACTIVE_DIRECTORY_LDAP:
+                if attr == 'objectClass':
+                    continue #Active Directory doesn't allow dynamic changing of object classes
             modlist.append((ldap.MOD_REPLACE, attr, values))
         self._ldapconn.modify_s(ldap_dn, modlist)
 
