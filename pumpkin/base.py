@@ -325,6 +325,9 @@ object classes: %s, all available attrs: %s""" % (
             value = self._storage.get(attr)
             log.debug("Returning localy stored value '%s' for attribute '%s'" % (
                 value, attr))
+            if self.directory._resource.server_type == resource.ACTIVE_DIRECTORY_LDAP:
+                if value in [[], '']:
+                    return None
             return value
         elif self.isnew():
             return None
