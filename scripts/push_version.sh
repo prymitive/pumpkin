@@ -17,6 +17,6 @@ git push --tags
 git archive --format=tar --prefix=pumpkin_${VER}/ release-${VER} | gzip > ../pumpkin-${VER}.tar.gz
 
 # create python egg
-python setup bdist_egg
+python setup.py bdist_egg
 mv dist/pumpkin*.egg ../
 rm -fr build
