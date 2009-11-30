@@ -205,6 +205,9 @@ class Directory(object):
         """
         ocs = []
         for oc in model.private_classes():
+            if self._resource.server_type == resource.ACTIVE_DIRECTORY_LDAP:
+                if oc in ["securityPrincipal"]:
+                    continue #Active Directory doesn't treat these as actually set
             ocs.append(filters.eq('objectClass', oc))
         model_filter = filters.opand(*ocs)
 
