@@ -1,44 +1,56 @@
+# -*- coding: utf-8 -*-
+'''
+Created on 2009-11-30
+@author: CBWhiz
+@contact: <cbwhiz@gmail.com>
+@license: GPLv3: http://www.gnu.org/licenses/gpl-3.0.txt
+'''
+
+
 from pumpkin.base import Model
 from pumpkin.fields import StringField, IntegerField, StringListField
+from pumpkin.contrib.fields import NullStringField, AD_UUIDField
 
-
-import ldap
-from ..fields import NullStringField, AD_UUIDField
 
 class GenericObject(Model):
     _object_class_ = ['top']
     _rdn_ = 'guid'
+    
     guid = AD_UUIDField('objectGUID')
 
-    def __init__(self, *args, **kwds):
-        super(GenericObject, self).__init__(*args, **kwds)
+    def __init__(self, *args, **kwargs):
+        super(GenericObject, self).__init__(*args, **kwargs)
 
     def __repr__(self):
-        return "<GenericObject %s class %s>"%(self.guid, self.object_class)
+        return "<GenericObject %s class %s>" % (self.guid, self.object_class)
 
-    def get_children(self, klass=None, recursive=False, search_filter=None):
-        if klass is None:
-            klass = GenericObject
-        basedn = self.dn
-        return self.directory.search(klass, basedn=basedn, search_filter=search_filter, recursive=recursive)
+    def get_children(self, model=GenericObject, recursive=False,
+        search_filter=None):
+        return self.directory.search(model, basedn=self.dn,
+            search_filter=search_filter, recursive=recursive)
+
 
 class OrganizationalUnit(GenericObject):
     _object_class_ = ['top', 'organizationalUnit']
     _rdn_ = ['name']
+
     name = StringField('ou')
     guid = AD_UUIDField('objectGUID')
+
     def __repr__(self):
-        return "<OrganizationalUnit '%s'>"%(self.name)
+        return "<OrganizationalUnit '%s'>" % (self.name)
+
 
 class Group(GenericObject):
     _object_class_ = ['top', 'group', 'securityPrincipal']
     _rdn_ = ['name']
+    
     name = StringField('cn')
     guid = AD_UUIDField('objectGUID')
     members = StringListField('member')
 
     account_name = StringField('sAMAccountName') #Pre-Windows 2000 Group Name
-	
+
     #primary_group_id = IntegerField('primaryGroupToken')
 	#Above line fails on AD rename + save with pumpkin.exceptions.SchemaViolation (though it does actually rename)
     @property
@@ -46,6 +58,7 @@ class Group(GenericObject):
         return int(self.directory.get_attr(self.dn, 'primaryGroupToken')[0])
     def __repr__(self):
         return "<Group '%s'>"%(self.name)
+
 
 #typedef enum  {
     #ADS_UF_SCRIPT                                   = 1,         // 0x1
@@ -71,8 +84,10 @@ class Group(GenericObject):
     #ADS_UF_TRUSTED_TO_AUTHENTICATE_FOR_DELEGATION   = 16777216   // 0x1000000
 #} ADS_USER_FLAG_ENUM;
 
+
 class User(GenericObject):
-    _object_class_ = ['top', 'person', 'organizationalPerson', 'user', 'securityPrincipal']
+    _object_class_ = [
+        'top', 'person', 'organizationalPerson', 'user', 'securityPrincipal']
     _rdn_ = ['name']
 
     name = StringField('cn')
@@ -86,6 +101,7 @@ class User(GenericObject):
     sam_account_name = StringField('sAMAccountName')
 
     user_account_control = IntegerField('userAccountControl')
+
     def __init__(self, *args, **kwargs):
         super(User, self).__init__(*args, **kwargs)
         self.user_account_control = 0x200
@@ -99,20 +115,20 @@ class User(GenericObject):
             self.user_account_control |= 0x2
         else:
             self.user_account_control &= ~0x2
-    disabled = property(_disabled_get, _disabled_set)
 
+    disabled = property(_disabled_get, _disabled_set)
 
     email = NullStringField('mail')
     member_of = StringListField('memberOf')
-
 	
-
     #primary_group_id = IntegerField('primaryGroupID')
     #Above line fails on AD Add with ldap.UNWILLING_TO_PERFORM
     def _get_primary_group_id(self):
         return int(self.directory.get_attr(self.dn, 'primaryGroupID')[0])
+
     def _set_primary_group_id(self, new_id):
         self.directory.set_attr(self.dn, 'primaryGroupID', ['%s'%(new_id)])
+
     primary_group_id = property(_get_primary_group_id, _set_primary_group_id)
 	
     def __repr__(self):

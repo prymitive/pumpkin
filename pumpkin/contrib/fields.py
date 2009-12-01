@@ -1,15 +1,29 @@
+# -*- coding: utf-8 -*-
+'''
+Created on 2009-11-30
+@author: CBWhiz
+@contact: <cbwhiz@gmail.com>
+@license: GPLv3: http://www.gnu.org/licenses/gpl-3.0.txt
+'''
+
+
 from pumpkin.fields import StringField
-from pumpkin.fields import Field, check_singleval, get_singleval
+from pumpkin.fields import Field, check_singleval
+
 
 __all__ = ["NullStringField"]
 
+
 class NullStringField(StringField):
-    """If a field can be the empty string, this will make sure AD deletes the val so it doesn't complain."""
+    """If a field can be the empty string, this will make sure AD deletes the
+    val so it doesn't complain.
+    """
     def encode2str(self, values, instance=None):
         if not values: #empty string is false
             return []
         else:
             return super(NullStringField, self).encode2str(values, instance)
+
 
 try:
     import uuid
@@ -18,7 +32,9 @@ except ImportError:
 else:
     __all__.append("AD_UUIDField")
     class AD_UUIDField(Field):
-        """Represents an Active Directory UUIDField (for example, the objectGUID attribute)"""
+        """Represents an Active Directory UUIDField (for example,
+        the objectGUID attribute)
+        """
         def decode2local(self, values, instance=None):
             check_singleval(self.attr, values)
             return uuid.UUID(bytes_le=values[0])

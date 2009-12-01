@@ -521,7 +521,8 @@ object classes: %s, all available attrs: %s""" % (
             log.debug("Adding new object to LDAP: '%s'" % self.dn)
             if self.directory._resource.server_type == resource.ACTIVE_DIRECTORY_LDAP:
                 if 'objectClass' in record and 'securityPrincipal' in record['objectClass']:
-                    record['objectClass'].remove('securityPrincipal') #In AD this is one of those implicit object classes
+                    record['objectClass'].remove('securityPrincipal')
+                    #In AD this is one of those implicit object classes
             self.directory.add_object(self.dn, record)
             self._empty = False
         else:
@@ -541,16 +542,23 @@ object classes: %s, all available attrs: %s""" % (
             log.debug("Save attributes for '%s': %s" % (self.dn, record))
 
             if self.directory._resource.server_type == resource.ACTIVE_DIRECTORY_LDAP:
-                for i in self.rdn_attrs(): #AD doesn't let you set these, and it was renamed earlier
+                #AD doesn't let you set these, and it was renamed earlier
+                for i in self.rdn_attrs():
                     if i in record:
                         del record[i]
-                for i in ['objectClass', 'objectGUID']: #AD also doesn't let you set these
+
+                #AD also doesn't let you set these
+                for i in ['objectClass', 'objectGUID']:
                     if i in record:
                         del record[i]
-                if len(record) != 0: #AD doesn't like empty modlists
+
+                #AD doesn't like empty modlists
+                if len(record) != 0:
                     self.directory.set_attrs(self.dn, record)
+
+                #Update GUID from ldap next time its requested
                 if 'objectGUID' in self._storage:
-                    del self._storage['objectGUID'] #Update GUID from ldap next time its requested
+                    del self._storage['objectGUID']
             else:
                 self.directory.set_attrs(self.dn, record)
 
