@@ -97,6 +97,12 @@ class _model(type):
                 else:
                     fset_func = None
 
+                # we check if custom validate method is present, if so we
+                # override fields validate reference
+                validate_name = '_%s_validate' % key
+                if validate_name in adict.keys():
+                    value._validator = adict[validate_name]
+
                 setattr(cls, key, property(
                     fget=fget_func,
                     fset=fset_func,

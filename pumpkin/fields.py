@@ -74,6 +74,9 @@ class Field(object):
         self.lazy = kwargs.get('lazy', False)
         self.binary = kwargs.get('binary', False)
 
+        # reference to custom validate method used by field
+        self._validator = None
+
         if kwargs.has_key('default'):
             self.default = kwargs.get('default')
             log.debug("New default value '%s' for field '%s'" % (
@@ -126,7 +129,11 @@ class Field(object):
         if value is None:
             self.fdel(instance)
         else:
-            value = self.validate(value)
+            if self._validator is None:
+                value = self.validate(value)
+            else:
+                log.debug("Custom field validator for attribute '%s'" % self.attr)
+                value = self._validator(instance, value)
             instance._set_attr(self.attr, self.encode2str(
                 value, instance=instance))
 
