@@ -44,6 +44,15 @@ class QA(Model):
     missing = StringField('employeeType', default='defaultValue123')
     dtime = DatetimeField('gidNumber')
     dict_field = DictField('carLicense')
+    validator = IntegerField('departmentNumber')
+
+    def _validator_validate(self, values):
+        """Custom field validator method
+        """
+        if values in [10,20,30]:
+            return values
+        else:
+            raise ValueError("Bad test value")
 
     def _custom_func_fget(self):
         """Simple fget function for 'custom_func' field
@@ -111,7 +120,7 @@ class Test(unittest.TestCase):
             'binary', 'attrdel', 'uid', 'missing', 'dtime', 'string_rw',
             'dict_field', 'string_list', 'integer_ro', 'string_list_write',
             'bool', 'lazy_binary', 'integer_list', 'integer', 'string_default',
-            'object_class', 'string', 'custom_func']
+            'object_class', 'validator', 'string', 'custom_func']
         )
 
     def test_string(self):
@@ -464,13 +473,13 @@ class Test(unittest.TestCase):
             'userCertificate', 'departmentNumber', 'uid', 'employeeType',
             'gidNumber', 'description', 'carLicense', 'mail', 'gidNumber',
             'street', 'initials', 'mobile', 'uidNumber', 'homeDirectory',
-            'objectClass', 'sn']
+            'objectClass', 'departmentNumber', 'sn']
         )
         self.assertEqual(qa.ldap_attributes(lazy=True), [
             'userCertificate', 'departmentNumber', 'uid', 'employeeType',
             'gidNumber', 'description', 'carLicense', 'mail', 'gidNumber',
             'street', 'initials', 'userCertificate', 'mobile', 'uidNumber',
-            'homeDirectory', 'objectClass', 'cn', 'sn']
+            'homeDirectory', 'objectClass', 'departmentNumber', 'cn', 'sn']
         )
 
 
@@ -714,3 +723,16 @@ class Test(unittest.TestCase):
         """
         res = resource.LDAPResource()
         res.sasl_method = 'f33'
+
+
+    def test_custom_field_validate_ok_value(self):
+        """Test using custom method validate field values, sets good value
+        """
+        qa.validator = 20
+
+
+    @nose.tools.raises(ValueError)
+    def test_custom_field_validate_bad_value(self):
+        """Test using custom method validate field values, sets bad value
+        """
+        qa.validator = 25

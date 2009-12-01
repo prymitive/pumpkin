@@ -72,6 +72,7 @@ mail: max.blank@blank.com
 initials: True
 cn: Max Blank
 description:: xITEhsW5xJjFu8WBw5MgTW9uIE5vdiAyMyAxOTozNToyNyAyMDA5
+departmentNumber: 15
 
 dn: cn=test_binary,ou=users,dc=company,dc=com
 homeDirectory: /home/users/test

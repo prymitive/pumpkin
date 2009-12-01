@@ -22,8 +22,7 @@ log = logging.getLogger(__name__)
 def unique_list(values):
     """Strip all reapeted values in list
     """
-    ret = set(values)
-    return list(ret)
+    return list(set(values))
 
 
 def check_singleval(name, values):
@@ -74,6 +73,9 @@ class Field(object):
         self.readonly = kwargs.get('readonly', False)
         self.lazy = kwargs.get('lazy', False)
         self.binary = kwargs.get('binary', False)
+
+        # reference to custom validate method used by field
+        self._validator = None
 
         if kwargs.has_key('default'):
             self.default = kwargs.get('default')
@@ -127,7 +129,11 @@ class Field(object):
         if value is None:
             self.fdel(instance)
         else:
-            value = self.validate(value)
+            if self._validator is None:
+                value = self.validate(value)
+            else:
+                log.debug("Custom field validator for attribute '%s'" % self.attr)
+                value = self._validator(instance, value)
             instance._set_attr(self.attr, self.encode2str(
                 value, instance=instance))
 

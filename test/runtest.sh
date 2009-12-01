@@ -33,6 +33,7 @@ SLAPD_PID=`ps aux | grep slapd | grep "$SLAPDCONF" | grep -v grep | awk '{print 
 echo "Openldap server ready"
 echo "====================="
 
+rm -f .coverage
 nosetests \
 -s \
 --with-coverage \
