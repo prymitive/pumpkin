@@ -24,8 +24,10 @@ class GenericObject(Model):
     def __repr__(self):
         return "<GenericObject %s class %s>" % (self.guid, self.object_class)
 
-    def get_children(self, model=GenericObject, recursive=False,
+    def get_children(self, model=None, recursive=False,
         search_filter=None):
+        if model is None:
+            model = GenericObject
         return self.directory.search(model, basedn=self.dn,
             search_filter=search_filter, recursive=recursive)
 
@@ -51,11 +53,8 @@ class Group(GenericObject):
 
     account_name = StringField('sAMAccountName') #Pre-Windows 2000 Group Name
 
-    #primary_group_id = IntegerField('primaryGroupToken')
-	#Above line fails on AD rename + save with pumpkin.exceptions.SchemaViolation (though it does actually rename)
-    @property
-    def primary_group_id(self):
-        return int(self.directory.get_attr(self.dn, 'primaryGroupToken')[0])
+    primary_group_id = IntegerField('primaryGroupToken', readonly=True)
+
     def __repr__(self):
         return "<Group '%s'>"%(self.name)
 
@@ -119,17 +118,21 @@ class User(GenericObject):
     disabled = property(_disabled_get, _disabled_set)
 
     email = NullStringField('mail')
-    member_of = StringListField('memberOf')
+    member_of = StringListField('memberOf', readonly=True)
 	
-    #primary_group_id = IntegerField('primaryGroupID')
-    #Above line fails on AD Add with ldap.UNWILLING_TO_PERFORM
-    def _get_primary_group_id(self):
-        return int(self.directory.get_attr(self.dn, 'primaryGroupID')[0])
+    primary_group_id = IntegerField('primaryGroupID')
 
-    def _set_primary_group_id(self, new_id):
-        self.directory.set_attr(self.dn, 'primaryGroupID', ['%s'%(new_id)])
-
-    primary_group_id = property(_get_primary_group_id, _set_primary_group_id)
+    def _primary_group_id_validate(self, values):
+        """Checks if value is being set on new object.
+        """ 
+        if self.isnew():
+            raise ValueError("Can't set this this field on new object")
+        elif not isinstance(values, int):
+            raise ValueError("Integer value required.")
+	    #TODO: Test if this is a valid value. It must be a group's
+        #      primary_group_id, and that group's DN must be listed
+        #      in this user's member_of list.
+        return values
 	
     def __repr__(self):
         return "<User '%s'>"%(self.name)
