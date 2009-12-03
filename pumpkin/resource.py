@@ -20,6 +20,9 @@ AUTH_SASL = 1
 CRAM_MD5 = 0
 DIGEST_MD5 = 1
 
+STANDARD_LDAP = 0
+ACTIVE_DIRECTORY_LDAP = 1
+
 class LDAPResource(object):
     """This class represents LDAP resource (server)
     """
@@ -36,6 +39,7 @@ class LDAPResource(object):
         self.basedn = ''
         self.tls = False
         self.timeout = ldap.OPT_TIMEOUT
+        self.server_type = STANDARD_LDAP
 
     def auth_method():
         doc = "Auth method, can be AUTH_SIMPLE or AUTH_SASL"

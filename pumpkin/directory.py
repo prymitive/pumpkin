@@ -205,6 +205,9 @@ class Directory(object):
         """
         ocs = []
         for oc in model.private_classes():
+            if self._resource.server_type == resource.ACTIVE_DIRECTORY_LDAP:
+                if oc in ["securityPrincipal"]:
+                    continue #Active Directory doesn't treat these as actually set
             ocs.append(filters.eq('objectClass', oc))
         model_filter = filters.opand(*ocs)
 
@@ -292,6 +295,9 @@ class Directory(object):
         """
         modlist = []
         for (attr, values) in ldap_attrs.items():
+            if self._resource.server_type == resource.ACTIVE_DIRECTORY_LDAP:
+                if attr == 'objectClass':
+                    continue #Active Directory doesn't allow dynamic changing of object classes
             modlist.append((ldap.MOD_REPLACE, attr, values))
         self._ldapconn.modify_s(ldap_dn, modlist)
 
