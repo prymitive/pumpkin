@@ -1,7 +1,6 @@
 from pumpkin.resource import LDAPResource, ACTIVE_DIRECTORY_LDAP
 from pumpkin.directory import Directory
 from pumpkin.contrib.models.ad import GenericObject, OrganizationalUnit, Group, User
-from pumpkin import filters
 
 import ldap
 
@@ -21,7 +20,7 @@ def test_dump_objects():
         print "\t%s"%(obj)
         print "\t\t%s: %s"%('guid', obj.guid)
 
-    print "Organizational Units:"	
+    print "Organizational Units:"
     for obj in AD_CONN.search(OrganizationalUnit, basedn='CN=Users,'+AD_RES.basedn):
         print "\t%s"%(obj)
         print "\t\t%s: %s"%('name', obj.name)
@@ -32,7 +31,7 @@ def test_dump_objects():
         print "\t\t%s: %s"%('name', obj.name)
         for i in ('name', 'primary_group_id'):
             print "\t\t%s: %s"%(i, getattr(obj, i))
-		
+
     print "Users:"
     for obj in AD_CONN.search(User, basedn='CN=Users,'+AD_RES.basedn):
         print "\t%s"%(obj)
@@ -47,7 +46,7 @@ def spawn_test_user():
     u.last_name = u"TEST"
     u.set_parent('CN=Users,'+AD_RES.basedn)
     return u
-	
+
 def spawn_test_group():
     g = Group(AD_CONN)
     g.account_name = u"PUMPKIN_TEST_GROUP"
@@ -106,7 +105,7 @@ def test_user_group_add():
     u.delete()
     g.delete()
     print "Cleaned up."
-	
+
 def test_user_add_fail():
     print "Test exception on adding a new user with a primary_group_id set"
     u = spawn_test_user()
@@ -116,7 +115,7 @@ def test_user_add_fail():
         print "Got expected ValueError on setting primary_group_id."
     else:
         print "ERROR: Got no exception on setting primary_group_id on new User."
-	
+
 if __name__ == '__main__':
     print
     test_dump_objects()
