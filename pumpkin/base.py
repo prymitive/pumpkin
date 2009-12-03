@@ -8,7 +8,12 @@ Created on 2009-06-11
 
 
 import logging
-from functools import wraps
+try:
+    # this is python >=2.5 module
+    from functools import wraps
+except ImportError:
+    # so in case of <2.5 fallback to this backported code (taken from django)
+    from pumpkin.contrib.backports import wraps
 
 from pumpkin.debug import PUMPKIN_LOGLEVEL
 from pumpkin.fields import Field, StringListField
