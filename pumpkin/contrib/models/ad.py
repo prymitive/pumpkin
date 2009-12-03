@@ -59,7 +59,8 @@ class Group(GenericObject):
 class UserAccountControlFlags:
     """Flags for User.user_account_control
     
-    MSDN calls this ADS_USER_FLAG_ENUM. See http://msdn.microsoft.com/en-us/library/aa772300%28VS.85%29.aspx
+    MSDN calls this ADS_USER_FLAG_ENUM. See
+    http://msdn.microsoft.com/en-us/library/aa772300%28VS.85%29.aspx
     """
     ADS_UF_SCRIPT                                   = 0x1
     ADS_UF_ACCOUNTDISABLE                           = 0x2       #Disabled User
@@ -82,6 +83,7 @@ class UserAccountControlFlags:
     ADS_UF_DONT_REQUIRE_PREAUTH                     = 0x400000
     ADS_UF_PASSWORD_EXPIRED                         = 0x800000
     ADS_UF_TRUSTED_TO_AUTHENTICATE_FOR_DELEGATION   = 0x1000000
+
 
 class User(GenericObject):
     _object_class_ = [
