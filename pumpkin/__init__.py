@@ -15,6 +15,7 @@ __all__ = [
     'filters',
     'exceptions',
     'serialize',
+    'contrib',
 ]
 
 import pumpkin.directory
@@ -25,3 +26,4 @@ import pumpkin.fields
 import pumpkin.filters
 import pumpkin.exceptions
 import pumpkin.serialize
+import pumpkin.contrib

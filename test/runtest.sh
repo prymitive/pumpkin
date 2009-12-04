@@ -8,7 +8,7 @@ checkret() {
 }
 
 WORKDIR=`pwd`
-SLAPD="/usr/lib/openldap/slapd"
+SLAPD="/usr/sbin/slapd"
 DBDIR="$WORKDIR/test/openldap/db"
 SCHEMADIR="$WORKDIR/test/openldap/schema"
 SLAPDCONF="$WORKDIR/test/openldap/db/slapd.conf"

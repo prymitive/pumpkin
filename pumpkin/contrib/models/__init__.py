@@ -7,11 +7,7 @@ Created on 2009-12-04
 '''
 
 __all__ = [
-    'backports',
-    'models',
-    'fields',
+    'ad',
 ]
 
-import pumpkin.contrib.backports
-import pumpkin.contrib.fields
-import pumpkin.contrib.models
+import pumpkin.contrib.models.ad
