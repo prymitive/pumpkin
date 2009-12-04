@@ -8,12 +8,17 @@ Created on 2009-06-11
 
 
 import logging
-from functools import wraps
+try:
+    # this is python >=2.5 module
+    from functools import wraps
+except ImportError:
+    # so in case of <2.5 fallback to this backported code (taken from django)
+    from pumpkin.contrib.backports import wraps
 
 from pumpkin.debug import PUMPKIN_LOGLEVEL
 from pumpkin.fields import Field, StringListField
 from pumpkin import exceptions
-
+from pumpkin import resource
 
 logging.basicConfig(level=PUMPKIN_LOGLEVEL)
 log = logging.getLogger(__name__)
@@ -281,6 +286,9 @@ object classes: %s, all available attrs: %s""" % (
         """
         for oc in self.private_classes():
             if oc not in self.object_class:
+                if self.directory._resource.server_type == resource.ACTIVE_DIRECTORY_LDAP:
+                    if oc in ['securityPrincipal']:
+                        continue #Active Directory treats these classes as being allowed, even when not in the schema
                 raise exceptions.ModelNotMatched(
                     "Object with dn %s does not have %s object class" % (
                         self.dn,
@@ -328,6 +336,9 @@ object classes: %s, all available attrs: %s""" % (
             value = self._storage.get(attr)
             log.debug("Returning localy stored value '%s' for attribute '%s'" % (
                 value, attr))
+            if self.directory._resource.server_type == resource.ACTIVE_DIRECTORY_LDAP:
+                if value in [[], '']:
+                    return None
             return value
         elif self.isnew():
             return None
@@ -383,7 +394,12 @@ object classes: %s, all available attrs: %s""" % (
 
                 # for each attribute value we create rdn part and append it
                 for value in values:
-                    rdn_part = '%s=%s' % (instance.attr, value)
+                    if self.directory._resource.server_type == resource.ACTIVE_DIRECTORY_LDAP:
+                        #AD prefers the rdn 'key' to be in uppercase.
+                        rdn_part = '%s=%s' % (instance.attr.upper(), value)
+                    else:
+                        rdn_part = '%s=%s' % (instance.attr, value)
+
                     if ret != '':
                         ret = '%s+%s' % (ret, rdn_part)
                     else:
@@ -514,6 +530,10 @@ object classes: %s, all available attrs: %s""" % (
             # when adding new object we need data dict without None values
             record = self.get_attributes(all=False)
             log.debug("Adding new object to LDAP: '%s'" % self.dn)
+            if self.directory._resource.server_type == resource.ACTIVE_DIRECTORY_LDAP:
+                if 'objectClass' in record and 'securityPrincipal' in record['objectClass']:
+                    record['objectClass'].remove('securityPrincipal')
+                    #In AD this is one of those implicit object classes
             self.directory.add_object(self.dn, record)
             self._empty = False
         else:
@@ -531,7 +551,31 @@ object classes: %s, all available attrs: %s""" % (
 
             record = self.get_attributes(all=True)
             log.debug("Save attributes for '%s': %s" % (self.dn, record))
-            self.directory.set_attrs(self.dn, record)
+
+            if self.directory._resource.server_type == resource.ACTIVE_DIRECTORY_LDAP:
+                #AD doesn't let you set these, and it was renamed earlier
+                for i in self.rdn_attrs():
+                    if i in record:
+                        del record[i]
+
+                #AD also doesn't let you set these
+                for i in ['objectClass', 'objectGUID']:
+                    if i in record:
+                        del record[i]
+
+                #AD doesn't like empty modlists
+                if len(record) != 0:
+                    self.directory.set_attrs(self.dn, record)
+
+                #Update GUID from ldap next time its requested
+                if 'objectGUID' in self._storage:
+                    del self._storage['objectGUID']
+            else:
+                self.directory.set_attrs(self.dn, record)
+
+
+
+
 
     @run_hooks
     def delete(self, recursive=False):

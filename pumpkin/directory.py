@@ -8,7 +8,12 @@ Created on 2009-05-24
 
 
 import logging
-from functools import wraps
+try:
+    # this is python >=2.5 module
+    from functools import wraps
+except ImportError:
+    # so in case of <2.5 fallback to this backported code (taken from django)
+    from pumpkin.contrib.backports import wraps
 
 import ldap
 from ldap import sasl, schema
@@ -205,6 +210,9 @@ class Directory(object):
         """
         ocs = []
         for oc in model.private_classes():
+            if self._resource.server_type == resource.ACTIVE_DIRECTORY_LDAP:
+                if oc in ["securityPrincipal"]:
+                    continue #Active Directory doesn't treat these as actually set
             ocs.append(filters.eq('objectClass', oc))
         model_filter = filters.opand(*ocs)
 
@@ -292,6 +300,9 @@ class Directory(object):
         """
         modlist = []
         for (attr, values) in ldap_attrs.items():
+            if self._resource.server_type == resource.ACTIVE_DIRECTORY_LDAP:
+                if attr == 'objectClass':
+                    continue #Active Directory doesn't allow dynamic changing of object classes
             modlist.append((ldap.MOD_REPLACE, attr, values))
         self._ldapconn.modify_s(ldap_dn, modlist)
 

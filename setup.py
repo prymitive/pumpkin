@@ -11,7 +11,7 @@ from setuptools import setup
 
 setup(
     name='pumpkin',
-    version='0.1.0',
+    version='0.1.1-dev',
     description='Simple library for working with ldap',
     author='Łukasz Mierzwa',
     author_email='l.mierzwa@gmail.com',

@@ -7,7 +7,12 @@ Created on 2009-07-12
 '''
 
 
-from functools import wraps
+try:
+    # this is python >=2.5 module
+    from functools import wraps
+except ImportError:
+    # so in case of <2.5 fallback to this backported code (taken from django)
+    from pumpkin.contrib.backports import wraps
 
 
 def unicode2str(func):
