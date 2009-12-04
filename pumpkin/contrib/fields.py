@@ -7,11 +7,10 @@ Created on 2009-11-30
 '''
 
 
+import uuid
+
 from pumpkin.fields import StringField
 from pumpkin.fields import Field, check_singleval
-
-
-__all__ = ["NullStringField"]
 
 
 class NullStringField(StringField):
@@ -25,25 +24,19 @@ class NullStringField(StringField):
             return super(NullStringField, self).encode2str(values, instance)
 
 
-try:
-    import uuid
-except ImportError:
-    pass
-else:
-    __all__.append("AD_UUIDField")
-    class AD_UUIDField(Field):
-        """Represents an Active Directory UUIDField (for example,
-        the objectGUID attribute)
-        """
-        def decode2local(self, values, instance=None):
-            check_singleval(self.attr, values)
-            return uuid.UUID(bytes_le=values[0])
+class AD_UUIDField(Field):
+    """Represents an Active Directory UUIDField (for example,
+    the objectGUID attribute)
+    """
+    def decode2local(self, values, instance=None):
+        check_singleval(self.attr, values)
+        return uuid.UUID(bytes_le=values[0])
 
-        def encode2str(self, values, instance=None):
-            return [values.bytes_le]
+    def encode2str(self, values, instance=None):
+        return [values.bytes_le]
 
-        def validate(self, values):
-            if isinstance(values, uuid.UUID):
-                return values
-            else:
-                raise ValueError("Not a UUID value: %s" % values)
+    def validate(self, values):
+        if isinstance(values, uuid.UUID):
+            return values
+        else:
+            raise ValueError("Not a UUID value: %s" % values)

@@ -7,7 +7,18 @@ Created on 2009-05-24
 @license: GPLv3: http://www.gnu.org/licenses/gpl-3.0.txt
 '''
 
+
 from setuptools import setup
+
+
+install_requires = ['setuptools', 'python-ldap']
+try:
+    # this is included in >=python2.5
+    import uuid
+except ImportError:
+    # so for older versions use uuid package from pypi
+    install_requires.append('uuid')
+
 
 setup(
     name='pumpkin',
@@ -16,8 +27,5 @@ setup(
     author='Łukasz Mierzwa',
     author_email='l.mierzwa@gmail.com',
     packages=['pumpkin', 'pumpkin.contrib', 'pumpkin.contrib.models'],
-    install_requires=[
-        'setuptools',
-        'python-ldap',
-    ],
+    install_requires=install_requires,
 )
