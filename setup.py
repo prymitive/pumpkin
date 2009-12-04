@@ -15,7 +15,7 @@ setup(
     description='Simple library for working with ldap',
     author='Łukasz Mierzwa',
     author_email='l.mierzwa@gmail.com',
-    packages=['pumpkin'],
+    packages=['pumpkin', 'pumpkin.contrib', 'pumpkin.contrib.models'],
     install_requires=[
         'setuptools',
         'python-ldap',
