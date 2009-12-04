@@ -8,10 +8,18 @@ checkret() {
 }
 
 WORKDIR=`pwd`
-SLAPD="/usr/sbin/slapd"
 DBDIR="$WORKDIR/test/openldap/db"
 SCHEMADIR="$WORKDIR/test/openldap/schema"
 SLAPDCONF="$WORKDIR/test/openldap/db/slapd.conf"
+
+if [ -x /usr/sbin/slapd ]; then
+    SLAPD="/usr/sbin/slapd"
+elif [ -x /usr/lib/openldap/slapd ]; then
+    SLAPD="/usr/lib/openldap/slapd"
+else
+    echo "Can't find slapd"
+    exit 1
+fi
 
 rm -fr "$DBDIR"/*
 cp "$WORKDIR"/test/openldap/DB_CONFIG "$DBDIR"/
