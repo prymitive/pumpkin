@@ -15,7 +15,7 @@ major_version() {
 setver() {
     # set release version in setup.py and sphinx conf.py, eg. setver 0.1.1
     MAJ=`major_version $1`
-    echo "Setting release version. Major version: \'$MAJ\', release: \'$1\'."
+    echo "Setting release version. Major version: '$MAJ', release: '$1'."
     sed -i s/"version\=.*"/"version=\'$1\',"/ setup.py
     sed -i s/"release\ \=\ .*"/"release\ \=\ \'$1\'"/ doc/source/conf.py
     sed -i s/"version\ \=\ .*"/"version\ \=\ \'$MAJ\'"/ doc/source/conf.py
@@ -25,7 +25,7 @@ setver() {
 devver() {
     # set development version in setup.py and sphinx conf.py
     # eg. devver 0.1 will set 0.1-dev
-    echo "Setting development version: \'$1-dev\'."
+    echo "Setting development version: '$1-dev'."
     sed -i s/"version\=.*"/"version=\'$1-dev\',"/ setup.py
     sed -i s/"release\ \=\ .*"/"release\ \=\ \'$1-dev\'"/ doc/source/conf.py
     sed -i s/"version\ \=\ .*"/"version\ \=\ \'$1\'"/ doc/source/conf.py
