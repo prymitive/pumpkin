@@ -20,3 +20,9 @@ git archive --format=tar --prefix=pumpkin_${VER}/ release-${VER} | gzip > ../pum
 python setup.py bdist_egg
 mv dist/pumpkin*.egg ../
 rm -fr build
+
+# push new files to server
+scp ../pumpkin-${VER}.tar.gz ../pumpkin*.egg lmierzwa@prymitive.com:~/public_html/files/
+
+# regenerate and push documentation
+bash ./scripts/autodoc.sh
