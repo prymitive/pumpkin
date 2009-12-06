@@ -5,6 +5,8 @@ VER="$1"
 if [ "$VER" == "" ]; then
     echo "Version not set"
     exit 1
+else
+    FULLVER="release-$VER"
 fi
 
 major_version() {
@@ -36,13 +38,13 @@ devver() {
 setver ${VER}
 
 # create remote branch for new version
-git push origin master:refs/heads/version-${VER}
+git push origin master:refs/heads/${FULLVER}
 
 # create local branch that follows remote branch
-git branch --track v${VER} origin/version-${VER}
+git branch --track ${FULLVER} origin/${FULLVER}
 
 # create release tag
-git tag release-${VER}
+git tag ${FULLVER}
 
 # push version
 git push --tags
@@ -51,4 +53,4 @@ git push --tags
 devver `major_version ${VER}`
 
 # checkout new version
-git checkout v${VER}
+git checkout ${FULLVER}

@@ -31,6 +31,9 @@ git checkout master
 # doc submodule is changed so let's commit it
 git commit -m "doc update for ${VER}" doc/build
 
+# push all pending git updates
+git push
+
 # push new files to server
 scp ../pumpkin-${VER}.tar.gz ../pumpkin*.egg lmierzwa@prymitive.com:~/public_html/files/ ; chkret
 
