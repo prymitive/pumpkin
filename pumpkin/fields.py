@@ -11,6 +11,7 @@ import time
 import datetime
 import logging
 import copy
+import re
 
 from pumpkin.debug import PUMPKIN_LOGLEVEL
 
@@ -365,6 +366,13 @@ class GeneralizedTimeField(Field):
     """Single valued datetime field that stores value using format described in
     1.3.6.1.4.1.1466.115.121.1.24
     """
+    field_re = re.compile(
+        r'(?P<year>[0-9]{4})(?P<month>[0-9]{2})(?P<day>[0-9]{2})' + \
+        '(?P<hour>[0-9]{2})(?P<minute>[0-9]{2})(?P<second>[0-9]{2})?' + \
+        '(?P<microsecond>,[0-9]*|.[0-9]*)?' + \
+        '(?P<timezone>Z|[-][0-9]{4}|[+][0-9]{4})'
+    )
+    
     def validate(self, values):
         """Check if value is valid datetime instance
         """
@@ -389,13 +397,25 @@ class GeneralizedTimeField(Field):
         """Return datetime instance
         """
         check_singleval(self.attr, values)
-        year = int(get_singleval(values)[0:4])
-        month = int(get_singleval(values)[4:6])
-        day = int(get_singleval(values)[6:8])
-        hour = int(get_singleval(values)[8:10])
-        minute = int(get_singleval(values)[10:12])
-        if len(get_singleval(values)) > 13:
-            second = int(get_singleval(values)[12:14])
+        match = self.field_re.match(get_singleval(values))
+        print match.groupdict()
+
+        if match.group('second') is not None:
+            second = int(match.group('second'))
         else:
             second = 0
-        return datetime.datetime(year, month, day, hour, minute, second)
+
+        if match.group('microsecond') is not None:
+            microsecond = int(match.group('microsecond').lstrip(',.'))
+        else:
+            microsecond = 0
+
+        return datetime.datetime(
+            int(match.group('year')),
+            int(match.group('month')),
+            int(match.group('day')),
+            int(match.group('hour')),
+            int(match.group('minute')),
+            second,
+            microsecond,
+        )
