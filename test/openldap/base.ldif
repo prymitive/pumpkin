@@ -109,3 +109,12 @@ uidNumber: 11
 gidNumber: 941
 cn: test_dict
 
+dn: ou=misc,dc=company,dc=com
+objectClass: organizationalUnit
+objectClass: top
+ou: misc
+
+dn: cn=dhcplease,ou=misc,dc=company,dc=com
+cn: dhcplease
+dhcpAddressState: FREE
+objectClass: dhcpLeases

@@ -359,3 +359,43 @@ class DictField(Field):
         """Return dict instance
         """
         return dict((i.split(self.delimiter)) for i in values)
+
+
+class GeneralizedTimeField(Field):
+    """Single valued datetime field that stores value using format described in
+    1.3.6.1.4.1.1466.115.121.1.24
+    """
+    def validate(self, values):
+        """Check if value is valid datetime instance
+        """
+        if isinstance(values, datetime.datetime):
+            return values
+        else:
+            raise ValueError("Not a datatime value: %s" % values)
+
+    def encode2str(self, values, instance=None):
+        """Return str values
+        """
+        return ["%04d%02d%02d%02d%02d%02dZ" % (
+            values.year,
+            values.month,
+            values.day,
+            values.hour,
+            values.minute,
+            values.second,
+        )]
+
+    def decode2local(self, values, instance=None):
+        """Return datetime instance
+        """
+        check_singleval(self.attr, values)
+        year = int(get_singleval(values)[0:4])
+        month = int(get_singleval(values)[4:6])
+        day = int(get_singleval(values)[6:8])
+        hour = int(get_singleval(values)[8:10])
+        minute = int(get_singleval(values)[10:12])
+        if len(get_singleval(values)) > 13:
+            second = int(get_singleval(values)[12:14])
+        else:
+            second = 0
+        return datetime.datetime(year, month, day, hour, minute, second)

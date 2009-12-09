@@ -94,6 +94,14 @@ class BrokenRDN(QA):
     _rdn_ = ['invalid', 'attr']
 
 
+class DhcpLease(Model):
+    _object_class_ = ['dhcpLeases']
+    _rdn_ = 'name'
+    name = StringField('cn')
+    state = StringField('dhcpAddressState')
+    expiration_time = GeneralizedTimeField('dhcpExpirationTime')
+
+
 qa = QA(LDAP_CONN, 'cn=Max Blank,ou=users,dc=company,dc=com')
 
 
@@ -736,3 +744,22 @@ class Test(unittest.TestCase):
         """Test using custom method validate field values, sets bad value
         """
         qa.validator = 25
+
+
+    def test_generalized_time_field(self):
+        """Test reading/writing to GeneralizedTimeField
+        """
+        dt = datetime.datetime.now()
+        dhcp = DhcpLease(LDAP_CONN, 'cn=dhcplease,ou=misc,dc=company,dc=com')
+        dhcp.expiration_time = dt
+        dhcp.save()
+        dhcp2 = DhcpLease(LDAP_CONN, 'cn=dhcplease,ou=misc,dc=company,dc=com')
+        self.assertEqual(dhcp2.expiration_time.ctime(), dt.ctime())
+
+
+    @nose.tools.raises(ValueError)
+    def test_generalized_time_field_bad_value(self):
+        """Test setting invalid value on GeneralizedTimeField
+        """
+        dhcp = DhcpLease(LDAP_CONN, 'cn=dhcplease,ou=misc,dc=company,dc=com')
+        dhcp.expiration_time = '2009'
