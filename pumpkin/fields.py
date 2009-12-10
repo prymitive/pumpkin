@@ -12,6 +12,7 @@ import datetime
 import logging
 import copy
 import re
+from dateutil import tz
 
 from pumpkin.debug import PUMPKIN_LOGLEVEL
 
@@ -368,9 +369,9 @@ class GeneralizedTimeField(Field):
     """
     field_re = re.compile(
         r'(?P<year>[0-9]{4})(?P<month>[0-9]{2})(?P<day>[0-9]{2})' + \
-        '(?P<hour>[0-9]{2})(?P<minute>[0-9]{2})(?P<second>[0-9]{2})?' + \
-        '(?P<microsecond>,[0-9]*|.[0-9]*)?' + \
-        '(?P<timezone>Z|[-][0-9]{4}|[+][0-9]{4})'
+        '(?P<hour>[0-9]{2})(?P<minute>[0-9]{2})?(?P<second>[0-9]{2})?' + \
+        '(?P<fraction>\.[0-9]{1,3})?' + \
+        '(?P<timezone>Z|[-][0-9]{4}|[+][0-9]{4})?'
     )
     
     def validate(self, values):
@@ -384,38 +385,85 @@ class GeneralizedTimeField(Field):
     def encode2str(self, values, instance=None):
         """Return str values
         """
-        return ["%04d%02d%02d%02d%02d%02dZ" % (
+        # this part is required
+        ret = "%04d%02d%02d%02d" % (
             values.year,
             values.month,
             values.day,
             values.hour,
-            values.minute,
-            values.second,
-        )]
+        )
+
+        if values.minute > 0 or values.second > 0:
+            ret += '%02d' % values.minute
+
+        if values.second > 0:
+            ret += '%02d' % values.second
+
+        if values.microsecond > 0:
+            # convert microseconds into fraction of second
+            fraction = values.microsecond / 1000000.0
+            if fraction >= 0.001:
+                ret += ('%.3f' % fraction)[1:]
+
+        if values.tzinfo is None:
+            ret += 'Z'
+        else:
+            ret += values.tzinfo.tzname(values)
+
+        return [ret]
 
     def decode2local(self, values, instance=None):
         """Return datetime instance
         """
         check_singleval(self.attr, values)
         match = self.field_re.match(get_singleval(values))
-        print match.groupdict()
 
-        if match.group('second') is not None:
+        if match.group('minute') is None and match.group('fraction'):
+            # if <minute> is missing then <fraction> represents fraction of hour
+            minute = int(60 * float(match.group('fraction')))
+        elif match.group('minute') is not None:
+            minute = int(match.group('minute'))
+        else:
+            minute = 0
+
+        if match.group('second') is None and match.group('fraction') and \
+            match.group('minute'):
+            # if <second> is missing but <minute> was set then <fraction>
+            # represents fraction of minute
+            second = int(60 * float(match.group('fraction')))
+        elif match.group('second') is not None:
             second = int(match.group('second'))
         else:
             second = 0
 
-        if match.group('microsecond') is not None:
-            microsecond = int(match.group('microsecond').lstrip(',.'))
+        if match.group('second') is not None and match.group('fraction'):
+            # if <second> is set then <fraction> represents fraction of second
+            microsecond = int(float(match.group('fraction')) * 1000000)
         else:
             microsecond = 0
+
+        if match.group('timezone') is None:
+            # missing timezone means localtime
+            timezone = None
+        elif match.group('timezone') == 'Z':
+            # Z means utc
+            timezone = tz.tzutc()
+        else:
+            timezone = tz.tzoffset(
+                match.group('timezone'),
+                int('%s1' % match.group('timezone')[0]) * (
+                    int(match.group('timezone')[1:3])*60*60 + \
+                    int(match.group('timezone')[3:5])*60
+                )
+            )
 
         return datetime.datetime(
             int(match.group('year')),
             int(match.group('month')),
             int(match.group('day')),
             int(match.group('hour')),
-            int(match.group('minute')),
+            minute,
             second,
             microsecond,
+            timezone,
         )

@@ -17,6 +17,7 @@ import nose
 import unittest
 import time
 import datetime
+from dateutil import tz
 
 from conn import LDAP_CONN, ANON_CONN, SERVER, BASEDN
 
@@ -755,6 +756,39 @@ class Test(unittest.TestCase):
         dhcp.save()
         dhcp2 = DhcpLease(LDAP_CONN, 'cn=dhcplease,ou=misc,dc=company,dc=com')
         self.assertEqual(dhcp2.expiration_time.ctime(), dt.ctime())
+
+        # test using timezones #1
+        timezone = tz.tzoffset("+0200", 7200)
+        dt = datetime.datetime(2007, 2, 25, 17, 23, 54, 123243, tzinfo=timezone)
+        dhcp.expiration_time = dt
+        dhcp.save()
+        dhcp2.update()
+        self.assertEqual(dhcp2.expiration_time.tzinfo, dt.tzinfo)
+        self.assertEqual(
+            dhcp2.expiration_time.microsecond,
+            dhcp.expiration_time.microsecond
+        )
+        self.assertEqual(17, dhcp2.expiration_time.hour)
+        self.assertEqual(23, dhcp2.expiration_time.minute)
+        self.assertEqual(54, dhcp2.expiration_time.second)
+        # GeneralizedTime stores values with resolution of 1/1000 second
+        # datetime.datetime uses 1/1000000 second resolution
+        self.assertEqual(123000, dhcp2.expiration_time.microsecond)
+
+        # test using timezones #2
+        timezone = tz.tzoffset("-0730", -27000)
+        dt = datetime.datetime(2007, 2, 25, 17, tzinfo=timezone)
+        dhcp.expiration_time = dt
+        dhcp.save()
+        dhcp2.update()
+        self.assertEqual(dhcp2.expiration_time.tzinfo, dt.tzinfo)
+        self.assertEqual(
+            dhcp2.expiration_time.second,
+            dhcp.expiration_time.second
+        )
+        self.assertEqual(17, dhcp2.expiration_time.hour)
+        self.assertEqual(0, dhcp2.expiration_time.minute)
+        self.assertEqual(0, dhcp2.expiration_time.second)
 
 
     @nose.tools.raises(ValueError)

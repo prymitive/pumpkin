@@ -11,7 +11,7 @@ Created on 2009-05-24
 from setuptools import setup
 
 
-install_requires = ['setuptools', 'python-ldap']
+install_requires = ['setuptools', 'python-ldap', 'python-dateutil']
 try:
     # this is included in >=python2.5
     import uuid
