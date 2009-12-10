@@ -205,10 +205,6 @@ class Test(unittest.TestCase):
     def test_create_object(self):
         """Test creating new object, removing single attribute, deleting object
         """
-        for old in LDAP_CONN.search(PosixGroup,
-            search_filter=eq(PosixGroup.gid, 1234)):
-            old.delete()
-
         pg = PosixGroup(LDAP_CONN)
         pg.name = u'Test group'
         pg.gid = 1234
@@ -253,11 +249,6 @@ class Test(unittest.TestCase):
     def test_rename(self):
         """Test saving renamed object
         """
-        for old in LDAP_CONN.search(
-            PosixGroup,
-            search_filter=eq(PosixGroup.gid, 54345)):
-                old.delete()
-
         pg = PosixGroup(LDAP_CONN)
         pg.name = u'test_rename_before'
         pg.gid = 54345
@@ -524,12 +515,6 @@ class Test(unittest.TestCase):
     def test_recursive_delete(self):
         """Test recursive delete on object
         """
-        try:
-            ou = Unit(LDAP_CONN,  "ou=unit1,%s" % LDAP_CONN.get_basedn())
-            ou.delete(recursive=True)
-        except:
-            pass
-
         for i in range(1, 10):
             ou = Unit(LDAP_CONN)
             if i > 1:
@@ -621,12 +606,6 @@ class Test(unittest.TestCase):
     def test_posixgroup(self):
         """Test PosixGroup methods
         """
-        try:
-            ou = Unit(LDAP_CONN, "ou=posix_group,%s" % LDAP_CONN.get_basedn())
-            ou.delete(recursive=True)
-        except:
-            pass
-
         ou = Unit(LDAP_CONN)
         ou.name = u"posix_group"
         ou.save()

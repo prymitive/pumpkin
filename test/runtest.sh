@@ -41,12 +41,15 @@ SLAPD_PID=`ps aux | grep slapd | grep "$SLAPDCONF" | grep -v grep | awk '{print 
 echo "Openldap server ready"
 echo "====================="
 
-rm -f .coverage
+rm -fr "$WORKDIR/test/html"
+
 nosetests \
 -s \
 --with-coverage \
 --cover-package=pumpkin \
---with-doctest \
+--cover-erase \
+--cover-html \
+--cover-html-dir "$WORKDIR/test/html" \
 ./test/test.py
 
 if [ "$SLAPD_PID" != "" ]; then
