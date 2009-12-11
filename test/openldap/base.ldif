@@ -118,3 +118,15 @@ dn: cn=dhcplease,ou=misc,dc=company,dc=com
 cn: dhcplease
 dhcpAddressState: FREE
 objectClass: dhcpLeases
+
+dn: cn=fraction_minute,ou=misc,dc=company,dc=com
+cn: fraction_minute
+dhcpAddressState: FREE
+objectClass: dhcpLeases
+dhcpExpirationTime: 2004102917.117Z
+
+dn: cn=fraction_second,ou=misc,dc=company,dc=com
+cn: fraction_second
+dhcpAddressState: FREE
+objectClass: dhcpLeases
+dhcpExpirationTime: 200410291734,85Z

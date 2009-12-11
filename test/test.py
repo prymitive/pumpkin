@@ -137,6 +137,12 @@ class Test(unittest.TestCase):
         """
         self.assertEqual(qa.string, u'Max Blank')
 
+    @nose.tools.raises(ValueError)
+    def test_sting_badvalue(self):
+        """Test setting StingField to invalid value
+        """
+        qa.string = 4
+
     def test_string_write(self):
         """Test writing value to a string
         """
@@ -170,20 +176,44 @@ class Test(unittest.TestCase):
         self.assertEqual(qa.string_list_write, org)
 
     @nose.tools.raises(ValueError)
-    def test_string_list_write_invalid(self):
-        """Test excepion on invalid value passed to StringListField
+    def test_string_list_write_invalid1(self):
+        """Test excepion on invalid value passed to StringListField (#1)
         """
         qa.string_list_write = [1]
+
+    @nose.tools.raises(ValueError)
+    def test_string_list_write_invalid2(self):
+        """Test excepion on invalid value passed to StringListField (#2)
+        """
+        qa.string_list_write = 4
 
     def test_integer(self):
         """Test reading integer
         """
         self.assertEqual(qa.integer, 1000)
 
+    @nose.tools.raises(ValueError)
+    def test_integer_write_invalid(self):
+        """Test excepion on invalid value passed to IntegerField
+        """
+        qa.integer = 'd'
+
     def test_integer_list(self):
         """Test reading list of integers
         """
         self.assertEqual(qa.integer_list, [12345, 67890])
+
+    @nose.tools.raises(ValueError)
+    def test_integer_list_write_invalid1(self):
+        """Test excepion on invalid value passed to IntegerListField (#1)
+        """
+        qa.integer_list = 'd'
+
+    @nose.tools.raises(ValueError)
+    def test_integer_list_write_invalid2(self):
+        """Test excepion on invalid value passed to IntegerListField (#2)
+        """
+        qa.integer_list = ['d']
 
     def test_custom_get(self):
         """Test reading with custom get function
@@ -290,6 +320,12 @@ class Test(unittest.TestCase):
         self.assertEqual(qa.bool, False)
         qa.bool = True
         self.assertEqual(qa.bool, True)
+
+    @nose.tools.raises(ValueError)
+    def test_bool_write_invalid(self):
+        """Test excepion on invalid value passed to bool field
+        """
+        qa.bool = 43
 
     def test_rdn(self):
         """Test generating new rdn string
@@ -410,6 +446,14 @@ class Test(unittest.TestCase):
         qa.save()
 
 
+    @nose.tools.raises(ValueError)
+    def test_datetime_write_invalid(self):
+        """Test excepion on invalid value passed to DatetimeField
+        """
+        dt = QA(LDAP_CONN, 'cn=test_datetime,ou=users,dc=company,dc=com')
+        dt.dtime = 35
+
+
     def test_dict(self):
         """Test dict filed
         """
@@ -428,6 +472,22 @@ class Test(unittest.TestCase):
 
         del dt.dict_field
         dt.save()
+
+
+    @nose.tools.raises(ValueError)
+    def test_dict_write_invalid1(self):
+        """Test excepion on invalid value passed to dict field (#1)
+        """
+        dt = QA(LDAP_CONN, 'cn=test_dict,ou=users,dc=company,dc=com')
+        dt.dict_field = dict(name=4)
+
+
+    @nose.tools.raises(ValueError)
+    def test_dict_write_invalid2(self):
+        """Test excepion on invalid value passed to dict field (#2)
+        """
+        dt = QA(LDAP_CONN, 'cn=test_dict,ou=users,dc=company,dc=com')
+        dt.dict_field = 'test'
 
 
     def test_auth_method(self):
@@ -776,3 +836,29 @@ class Test(unittest.TestCase):
         """
         dhcp = DhcpLease(LDAP_CONN, 'cn=dhcplease,ou=misc,dc=company,dc=com')
         dhcp.expiration_time = '2009'
+
+
+    def test_generalized_time_fraction_minute(self):
+        """Test parsing minutes described as fraction of hour
+        """
+        dhcp = DhcpLease(
+            LDAP_CONN, 'cn=fraction_minute,ou=misc,dc=company,dc=com')
+        dt = datetime.datetime(2004, 10, 29, 17, 7, tzinfo=tz.tzutc())
+        self.assertEqual(dt, dhcp.expiration_time)
+
+
+    def test_generalized_time_fraction_second(self):
+        """Test parsing seconds described as fraction of minute
+        """
+        dhcp = DhcpLease(
+            LDAP_CONN, 'cn=fraction_second,ou=misc,dc=company,dc=com')
+        dt = datetime.datetime(2004, 10, 29, 17, 34, 51, tzinfo=tz.tzutc())
+        self.assertEqual(dt, dhcp.expiration_time)
+
+
+    @nose.tools.raises(Exception)
+    def test_get_with_multiple_found(self):
+        """Test calling directory.get() when multiple objects are found
+        """
+        LDAP_CONN.get(
+            PosixUser, search_filter=eq(PosixUser.object_class, 'top'))

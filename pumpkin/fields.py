@@ -370,7 +370,7 @@ class GeneralizedTimeField(Field):
     field_re = re.compile(
         r'(?P<year>[0-9]{4})(?P<month>[0-9]{2})(?P<day>[0-9]{2})' + \
         '(?P<hour>[0-9]{2})(?P<minute>[0-9]{2})?(?P<second>[0-9]{2})?' + \
-        '(?P<fraction>\.[0-9]{1,3})?' + \
+        '(?P<fraction>(\.|\,)[0-9]{1,3})?' + \
         '(?P<timezone>Z|[-][0-9]{4}|[+][0-9]{4})?'
     )
     
@@ -430,7 +430,7 @@ class GeneralizedTimeField(Field):
             match.group('minute'):
             # if <second> is missing but <minute> was set then <fraction>
             # represents fraction of minute
-            second = int(60 * float(match.group('fraction')))
+            second = int(60 * float(match.group('fraction').replace(',', '.')))
         elif match.group('second') is not None:
             second = int(match.group('second'))
         else:
