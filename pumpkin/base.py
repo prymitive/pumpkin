@@ -622,6 +622,24 @@ object classes: %s, all available attrs: %s""" % (
         #TODO add check if object has password field or implement PasswordField
         self.directory.passwd(self._ldap_dn(), oldpass, newpass)
 
+    def get_children(self, model=None, recursive=True):
+        """Return list of children objects
+
+        .. attribute:: model
+
+           model used for search, it defaults to
+           :class:`~pumpkin.base.Model` which will match all objects, if custom
+           model is passed it will only return children matching model.
+
+        .. attribute:: recursive
+
+           if recursive is True we will get all objects from current object
+           subtree, if it is False, only objects which are located directly
+           under current object will be returned.
+        """
+        return self.directory.search(
+            model, self.dn, recursive=recursive, skip_basedn=True)
+
 
 class Model(_Model):
     """Base model, it has only dn field and is used for example to remove any

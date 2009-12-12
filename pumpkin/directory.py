@@ -22,7 +22,8 @@ from pumpkin.debug import PUMPKIN_LOGLEVEL
 from pumpkin import resource
 from pumpkin import filters
 from pumpkin import exceptions
-from objectlist import ObjectList
+from pumpkin.objectlist import ObjectList
+from pumpkin.base import Model
 
 
 logging.basicConfig(level=PUMPKIN_LOGLEVEL)
@@ -208,6 +209,10 @@ class Directory(object):
         """Search for all objects matching model and return list of model
         instances
         """
+        #HACK for base.get_children() - will be fixed in 0.2
+        if model is None:
+            model = Model
+
         ocs = []
         for oc in model.private_classes():
             if self._resource.server_type == resource.ACTIVE_DIRECTORY_LDAP:
@@ -316,7 +321,8 @@ class Directory(object):
     @ldap_reconnect_handler
     @ldap_exception_handler
     def rename(self, old_dn, new_rdn, parent=None):
-        """Rename object
+        """Rename or move object, renaming objects with children is not 
+        supported.
         """
         self._ldapconn.rename_s(old_dn, new_rdn, newsuperior=parent)
 

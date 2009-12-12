@@ -862,3 +862,17 @@ class Test(unittest.TestCase):
         """
         LDAP_CONN.get(
             PosixUser, search_filter=eq(PosixUser.object_class, 'top'))
+
+
+    def test_get_children(self):
+        """Test calling get_children() method
+        """
+        unit = Unit(LDAP_CONN, "ou=users,dc=company,dc=com")
+        self.assertEqual(
+            [u'cn=hook_user,ou=users,dc=company,dc=com',
+                u'cn=Max Blank,ou=users,dc=company,dc=com',
+                u'cn=test_binary,ou=users,dc=company,dc=com',
+                u'cn=test_datetime,ou=users,dc=company,dc=com',
+                u'cn=test_dict,ou=users,dc=company,dc=com'],
+            [c.dn for c in unit.get_children()]
+        )

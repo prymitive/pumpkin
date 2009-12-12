@@ -111,3 +111,4 @@ class Unit(Model):
     _rdn_ = 'name'
 
     name = StringField('ou')
+    description = StringField('description')
