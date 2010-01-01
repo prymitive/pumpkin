@@ -810,9 +810,7 @@ class Test(unittest.TestCase):
         self.assertEqual(17, dhcp2.expiration_time.hour)
         self.assertEqual(23, dhcp2.expiration_time.minute)
         self.assertEqual(54, dhcp2.expiration_time.second)
-        # GeneralizedTime stores values with resolution of 1/1000 second
-        # datetime.datetime uses 1/1000000 second resolution
-        self.assertEqual(123000, dhcp2.expiration_time.microsecond)
+        self.assertEqual(123243, dhcp2.expiration_time.microsecond)
 
         # test using timezones #2
         timezone = tz.tzoffset("-0730", -27000)

@@ -36,6 +36,7 @@ slaptest -f "$SLAPDCONF"
 checkret "Broken slapd.conf, exiting"
 
 $SLAPD -f "$SLAPDCONF" -h ldap://localhost:1389
+checkret "slapd did not start correctly"
 SLAPD_PID=`ps aux | grep slapd | grep "$SLAPDCONF" | grep -v grep | awk '{print $2}'`
 
 echo "Openldap server ready"
