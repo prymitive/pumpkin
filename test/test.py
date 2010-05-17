@@ -874,3 +874,11 @@ class Test(unittest.TestCase):
                 u'cn=test_dict,ou=users,dc=company,dc=com'],
             [c.dn for c in unit.get_children()]
         )
+
+    def test_unicode_dn(self):
+        """Test creating object with unicode characters in dn.
+        """
+        ou = Unit(LDAP_CONN)
+        ou.name = u'ąźćżłóśę'
+        ou.save()
+        self.assertEqual(ou.dn, u'ou=ąźćżłóśę,%s' % BASEDN)
