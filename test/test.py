@@ -875,10 +875,24 @@ class Test(unittest.TestCase):
             [c.dn for c in unit.get_children()]
         )
 
-    def test_unicode_dn(self):
-        """Test creating object with unicode characters in dn.
+    def test_unicode_dn_(self):
+        """Test handling objects with unicode characters in dn.
         """
+        # test adding new object
         ou = Unit(LDAP_CONN)
         ou.name = u'ąźćżłóśę'
         ou.save()
         self.assertEqual(ou.dn, u'ou=ąźćżłóśę,%s' % BASEDN)
+
+        # test renaming
+        ou.name = u'ŁĘĆŹ'
+        ou.save()
+        self.assertEqual(ou.dn, u'ou=ŁĘĆŹ,%s' % BASEDN)
+
+        # test moving
+        ou.set_parent('ou=users,%s' % BASEDN)
+        ou.save()
+        self.assertEqual(ou.dn, u'ou=ŁĘĆŹ,ou=users,%s' % BASEDN)
+
+        # test deleting
+        ou.delete()
