@@ -110,6 +110,14 @@ class Directory(object):
         self._ldapconn = None
         self._schema = None
 
+    def _encode(self, dn):
+        """Check if given dn is utf string and encode it if needed.
+        """
+        if isinstance(dn, unicode):
+            return dn.encode('utf-8')
+        else:
+            return dn
+
     def _start_tls(self):
         """Starts tls session if tls is enabled
         """
@@ -166,7 +174,7 @@ class Directory(object):
     def get_basedn(self):
         """Returns basedn for connected resource
         """
-        return self._resource.basedn
+        return self._encode(self._resource.basedn)
 
     @ldap_exception_handler
     def _connect(self):
@@ -235,7 +243,7 @@ class Directory(object):
             final_filter = model_filter
 
         data = self._ldapconn.search_ext_s(
-            basedn,
+            self._encode(basedn),
             scope,
             final_filter,
             attrlist=model.ldap_attributes(lazy=False),
@@ -274,7 +282,7 @@ class Directory(object):
         """Get multiple attributes for object ldap_dn from LDAP
         """
         ldap_entry = self._ldapconn.search_ext_s(
-            ldap_dn,
+            self._encode(ldap_dn),
             ldap.SCOPE_BASE,
             attrlist=ldap_attrs,
             timeout=self._resource.timeout,
@@ -309,14 +317,14 @@ class Directory(object):
                 if attr == 'objectClass':
                     continue #Active Directory doesn't allow dynamic changing of object classes
             modlist.append((ldap.MOD_REPLACE, attr, values))
-        self._ldapconn.modify_s(ldap_dn, modlist)
+        self._ldapconn.modify_s(self._encode(ldap_dn), modlist)
 
     @ldap_reconnect_handler
     @ldap_exception_handler
     def passwd(self, ldap_dn, oldpass, newpass):
         """Change password for object ldap_dn in LDAP
         """
-        self._ldapconn.passwd_s(ldap_dn, oldpass, newpass)
+        self._ldapconn.passwd_s(self._encode(ldap_dn), oldpass, newpass)
 
     @ldap_reconnect_handler
     @ldap_exception_handler
@@ -324,14 +332,15 @@ class Directory(object):
         """Rename or move object, renaming objects with children is not 
         supported.
         """
-        self._ldapconn.rename_s(old_dn, new_rdn, newsuperior=parent)
+        self._ldapconn.rename_s(self._encode(old_dn), self._encode(new_rdn),
+            newsuperior=parent)
 
     @ldap_reconnect_handler
     @ldap_exception_handler
     def delete(self, ldap_dn):
         """Delete object ldap_dn from LDAP
         """
-        self._ldapconn.delete_s(ldap_dn)
+        self._ldapconn.delete_s(self._encode(ldap_dn))
 
     @ldap_reconnect_handler
     @ldap_exception_handler
@@ -341,7 +350,7 @@ class Directory(object):
         modlist = []
         for (attr, values) in attrs.items():
             modlist.append((attr, values))
-        self._ldapconn.add_s(ldap_dn, modlist)
+        self._ldapconn.add_s(self._encode(ldap_dn), modlist)
 
     def _get_oc_inst(self, oc):
         """Get object class instance
