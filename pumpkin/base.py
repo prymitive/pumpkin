@@ -272,7 +272,7 @@ class _Model(object):
 
             for (field, instance) in self._get_fields().items():
                 # check if all non read-only attributes can be stored
-                if not instance.readonly and instance.attr not in must + may:
+                if not instance.readonly and instance.validate_schema and instance.attr not in must + may:
                     raise exceptions.SchemaValidationError(
 """Can't store '%s' field with LDAP attribute '%s' using current schema and \
 object classes: %s, all available attrs: %s""" % (

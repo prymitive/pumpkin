@@ -70,11 +70,13 @@ class Field(object):
         for big binary attributes like 'jpegPhoto'
         @ivar binary: field requires binary transfer (for example
         'userCertificate' attribute needs this
+        @ivar validate_schema: check if model matches server schema
         """
         self.attr = name
         self.readonly = kwargs.get('readonly', False)
         self.lazy = kwargs.get('lazy', False)
         self.binary = kwargs.get('binary', False)
+        self.validate_schema = kwargs.get('validate_schema', True)
 
         # reference to custom validate method used by field
         self._validator = None
