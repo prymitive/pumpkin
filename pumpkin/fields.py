@@ -305,6 +305,32 @@ class BinaryField(Field):
         return get_singleval(values)
 
 
+class DatetimeListField(Field):
+    """List of datetime values
+    """
+    def validate(self, values):
+        """Check if value is valid datetime instance
+        """
+        if isinstance(values, list):
+            values = unique_list(values)
+            for value in values:
+                if not isinstance(value, datetime.datetime):
+                    raise ValueError, "Not a datetime value: %s" % value
+            return values
+        else:
+            raise ValueError, "Not a list of datetime values: %s" % values
+
+    def encode2str(self, values, instance=None):
+        """Return str values
+        """
+        return [str(int(time.mktime(v.timetuple()))) for v in values]
+
+    def decode2local(self, values, instance=None):
+        """Return datetime instance
+        """
+        return [datetime.datetime.fromtimestamp(float(v)) for v in values]
+
+
 class DatetimeField(Field):
     """Single valued datetime field
     """

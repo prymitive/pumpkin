@@ -103,6 +103,10 @@ class DhcpLease(Model):
     expiration_time = GeneralizedTimeField('dhcpExpirationTime')
 
 
+class DateTimeListTest(QA):
+    dtlist = DatetimeListField('mobile')
+
+
 qa = QA(LDAP_CONN, 'cn=Max Blank,ou=users,dc=company,dc=com')
 
 
@@ -452,6 +456,21 @@ class Test(unittest.TestCase):
         """
         dt = QA(LDAP_CONN, 'cn=test_datetime,ou=users,dc=company,dc=com')
         dt.dtime = 35
+
+
+    def test_datetime_list(self):
+        """Test read and write of DatetimeListField
+        """
+        dtl = DateTimeListTest(LDAP_CONN,
+            'cn=Max Blank,ou=users,dc=company,dc=com')
+        dt1 = datetime.datetime(1970, 1, 1, 4, 25, 45)
+        dt2 = datetime.datetime(1970, 1, 1, 19, 51, 30)
+        self.assertEqual(dtl.dtlist, [dt1, dt2])
+
+        dt1 = datetime.datetime(1999, 1, 1, 1, 1, 1)
+        dt2 = datetime.datetime(2012, 12, 31, 23, 59, 59)
+        dtl.dtlist = [dt1, dt2]
+        self.assertEqual(dtl.dtlist, [dt2, dt1])
 
 
     def test_dict(self):
