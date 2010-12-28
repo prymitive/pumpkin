@@ -213,9 +213,18 @@ class Directory(object):
     @ldap_reconnect_handler
     @ldap_exception_handler
     def search(self, model, basedn=None, recursive=True, search_filter=None,
-        skip_basedn=False):
+        skip_basedn=False, lazy=False):
         """Search for all objects matching model and return list of model
         instances
+        
+        :argument model: model class to search for
+        :parameter basedn: basedn for LDAP search operation, if None LDAP
+          resource basedn will be used
+        :parameter recursive: whenever to search with subtree scope, default
+          is True
+        :parameter search_filter: additional LDAP search filter to use
+        :parameter lazy: whenever to fetch lazy attributes when doing
+          LDAP search, default is False
         """
         #HACK for base.get_children() - will be fixed in 0.2
         if model is None:
@@ -246,7 +255,7 @@ class Directory(object):
             self._encode(basedn),
             scope,
             final_filter,
-            attrlist=model.ldap_attributes(lazy=False),
+            attrlist=model.ldap_attributes(lazy=lazy),
             timeout=self._resource.timeout,
         )
 
