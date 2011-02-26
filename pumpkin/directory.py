@@ -342,7 +342,7 @@ class Directory(object):
         """Rename or move object.
         """
         def _move(obj, newdn):
-            self.copy(obj, newdn)
+            self.copy(obj.dn, newdn)
             log.debug("Copy '%s' to '%s'" % (obj.dn, newdn))
             for sub in obj.get_children(model=Model, recursive=False):
                 newsubdn = u'%s,%s' % (sub.dn.split(',')[0], newdn)
@@ -388,13 +388,24 @@ class Directory(object):
             modlist.append((attr, values))
         self._ldapconn.add_s(self._encode(ldap_dn), modlist)
 
-    def copy(self, obj, newdn):
+    def copy(self, olddn, newdn):
         """Copy LDAP object.
         """
-        obj.update(missing_only=True)
-        attrs = obj.get_attributes(all=False)
-        log.debug("Copy '%s' to '%s' with attrs: %s" % (obj.dn, newdn, attrs))
-        self.add_object(newdn, attrs)
+        ldap_entry = self._ldapconn.search_ext_s(self._encode(olddn),
+            ldap.SCOPE_BASE, timeout=self._resource.timeout)
+
+        modlist = {}
+        if ldap_entry != []:
+            if len(ldap_entry) > 1:
+                raise Exception('Got multiple objects for dn: %s' % olddn)
+            else:
+                ret = ldap_entry[0][1]
+                # We fetch all the keys and set the modlist
+                for key in ret.keys():
+                    modlist[key] = self.get_attr(olddn, key)
+        
+        log.debug("Copy '%s' to '%s' with attrs: %s" % (olddn, newdn, modlist))
+        self.add_object(newdn, modlist)
 
     def _get_oc_inst(self, oc):
         """Get object class instance

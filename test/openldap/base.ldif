@@ -165,6 +165,7 @@ dn: ou=l1_1,ou=l1,ou=rename_ąźć,dc=company,dc=com
 objectClass: organizationalUnit
 objectClass: top
 ou: l1_1
+description: l1_1 unit
 
 dn: ou=l1_2,ou=l1,ou=rename_ąźć,dc=company,dc=com
 objectClass: organizationalUnit

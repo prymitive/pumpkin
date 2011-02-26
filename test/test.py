@@ -954,3 +954,4 @@ class Test(unittest.TestCase):
         self.assertEqual(l1_1.dn,
             u'ou=l1_1,ou=l1,ou=renamed_łóźććżą,dc=company,dc=com')
         self.assertEqual(l1_1.name, u'l1_1')
+        self.assertEqual(l1_1.description, u'l1_1 unit')
