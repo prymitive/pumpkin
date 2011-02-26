@@ -130,3 +130,23 @@ cn: fraction_second
 dhcpAddressState: FREE
 objectClass: dhcpLeases
 dhcpExpirationTime: 200410291734,85Z
+
+dn: ou=rename,dc=company,dc=com
+objectClass: organizationalUnit
+objectClass: top
+ou: rename
+
+dn: ou=l1,ou=rename,dc=company,dc=com
+objectClass: organizationalUnit
+objectClass: top
+ou: l1
+
+dn: ou=l1_1,ou=l1,ou=rename,dc=company,dc=com
+objectClass: organizationalUnit
+objectClass: top
+ou: l1_1
+
+dn: ou=l1_2,ou=l1,ou=rename,dc=company,dc=com
+objectClass: organizationalUnit
+objectClass: top
+ou: l1_2

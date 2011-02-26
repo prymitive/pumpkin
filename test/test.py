@@ -915,3 +915,16 @@ class Test(unittest.TestCase):
 
         # test deleting
         ou.delete()
+
+    def test_rename_with_children(self):
+        """Test renaming object with children
+        """
+        unit = Unit(LDAP_CONN, "ou=rename,dc=company,dc=com")
+        unit.name = u"after_rename"
+        unit.save()
+
+        self.assertEqual(unit.dn, u"ou=after_rename,dc=company,dc=com")
+
+        l1_2 = LDAP_CONN.get(Unit, search_filter=eq(Unit.name, 'l1_2'))
+        self.assertEqual(l1_2.dn,
+            u'ou=l1_2,ou=l1,ou=after_rename,dc=company,dc=com')
