@@ -923,8 +923,34 @@ class Test(unittest.TestCase):
         unit.name = u"after_rename"
         unit.save()
 
+        old = LDAP_CONN.get(Unit, search_filter=eq(Unit.name, "rename"),
+            basedn=unit.dn)
+        self.assertEqual(None, old)
+
         self.assertEqual(unit.dn, u"ou=after_rename,dc=company,dc=com")
 
-        l1_2 = LDAP_CONN.get(Unit, search_filter=eq(Unit.name, 'l1_2'))
+        l1_2 = LDAP_CONN.get(Unit, search_filter=eq(Unit.name, 'l1_2'),
+            basedn=unit.dn)
         self.assertEqual(l1_2.dn,
             u'ou=l1_2,ou=l1,ou=after_rename,dc=company,dc=com')
+        self.assertEqual(l1_2.name, u'l1_2')
+
+    def test_rename_with_children_unicode(self):
+        """Test renaming object with children when unicode characters are used
+        as part of object dn.
+        """
+        unit = Unit(LDAP_CONN, "ou=rename_ąźć,dc=company,dc=com")
+        unit.name = u"renamed_łóźććżą"
+        unit.save()
+
+        old = LDAP_CONN.get(Unit, search_filter=eq(Unit.name, "rename_ąźć"),
+            basedn=unit.dn)
+        self.assertEqual(None, old)
+
+        self.assertEqual(unit.dn, u"ou=renamed_łóźććżą,dc=company,dc=com")
+
+        l1_1 = LDAP_CONN.get(Unit, search_filter=eq(Unit.name, 'l1_1'),
+            basedn=unit.dn)
+        self.assertEqual(l1_1.dn,
+            u'ou=l1_1,ou=l1,ou=renamed_łóźććżą,dc=company,dc=com')
+        self.assertEqual(l1_1.name, u'l1_1')

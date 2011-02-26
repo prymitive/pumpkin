@@ -24,6 +24,7 @@ from pumpkin import filters
 from pumpkin import exceptions
 from pumpkin.objectlist import ObjectList
 from pumpkin.base import Model
+from pumpkin.models import Unit
 
 
 logging.basicConfig(level=PUMPKIN_LOGLEVEL)
@@ -261,7 +262,7 @@ class Directory(object):
 
         ret = ObjectList()
         for (dn, attrs) in data:
-            if skip_basedn and dn == basedn:
+            if skip_basedn and self._encode(dn) == self._encode(basedn):
                 continue
             ret.append(model(self, dn=dn, attrs=attrs))
 
@@ -338,11 +339,36 @@ class Directory(object):
     @ldap_reconnect_handler
     @ldap_exception_handler
     def rename(self, old_dn, new_rdn, parent=None):
-        """Rename or move object, renaming objects with children is not 
-        supported.
+        """Rename or move object.
         """
-        self._ldapconn.rename_s(self._encode(old_dn), self._encode(new_rdn),
-            newsuperior=parent)
+        def _move(obj, newdn):
+            self.copy(obj, newdn)
+            log.debug("Copy '%s' to '%s'" % (obj.dn, newdn))
+            for sub in obj.get_children(model=Model, recursive=False):
+                newsubdn = u'%s,%s' % (sub.dn.split(',')[0], newdn)
+                log.debug("Copy child '%s'" % sub.dn)
+                _move(sub, newsubdn)
+            obj.delete(recursive=True)
+
+        obj = Model(self, old_dn)
+        if parent:
+            newdn = u'%s,%s' % (new_rdn, parent)
+        else:
+            newdn = u'%s,%s' % (new_rdn, u','.join(obj.dn.split(',')[1:]))
+        if obj.get_children(model=Model) == []:
+            # object has no children, run normal rename
+            log.debug("Performing rename_s on %s" % old_dn)
+            try:
+                self._ldapconn.rename_s(self._encode(old_dn),
+                    self._encode(new_rdn), newsuperior=parent)
+            except ldap.UNWILLING_TO_PERFORM, e:
+                log.debug("rename_s failed, re-running complex rename")
+                _move(obj, newdn)
+        else:
+            # we got children objects, make complex rename
+            # first create temporary OU for children
+            log.debug("Performing complex rename on %s" % old_dn)
+            _move(obj, newdn)
 
     @ldap_reconnect_handler
     @ldap_exception_handler
@@ -356,10 +382,19 @@ class Directory(object):
     def add_object(self, ldap_dn, attrs):
         """Add new object to LDAP
         """
+        log.debug("Creating new object '%s': %s" % (ldap_dn, attrs))
         modlist = []
         for (attr, values) in attrs.items():
             modlist.append((attr, values))
         self._ldapconn.add_s(self._encode(ldap_dn), modlist)
+
+    def copy(self, obj, newdn):
+        """Copy LDAP object.
+        """
+        obj.update(missing_only=True)
+        attrs = obj.get_attributes(all=False)
+        log.debug("Copy '%s' to '%s' with attrs: %s" % (obj.dn, newdn, attrs))
+        self.add_object(newdn, attrs)
 
     def _get_oc_inst(self, oc):
         """Get object class instance

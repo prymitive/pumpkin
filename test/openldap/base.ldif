@@ -150,3 +150,23 @@ dn: ou=l1_2,ou=l1,ou=rename,dc=company,dc=com
 objectClass: organizationalUnit
 objectClass: top
 ou: l1_2
+
+dn: ou=rename_ąźć,dc=company,dc=com
+objectClass: organizationalUnit
+objectClass: top
+ou: rename
+
+dn: ou=l1,ou=rename_ąźć,dc=company,dc=com
+objectClass: organizationalUnit
+objectClass: top
+ou: l1
+
+dn: ou=l1_1,ou=l1,ou=rename_ąźć,dc=company,dc=com
+objectClass: organizationalUnit
+objectClass: top
+ou: l1_1
+
+dn: ou=l1_2,ou=l1,ou=rename_ąźć,dc=company,dc=com
+objectClass: organizationalUnit
+objectClass: top
+ou: l1_2
