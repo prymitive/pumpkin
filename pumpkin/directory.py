@@ -24,7 +24,6 @@ from pumpkin import filters
 from pumpkin import exceptions
 from pumpkin.objectlist import ObjectList
 from pumpkin.base import Model
-from pumpkin.models import Unit
 
 
 logging.basicConfig(level=PUMPKIN_LOGLEVEL)
@@ -384,23 +383,20 @@ class Directory(object):
     def copy(self, olddn, newdn, recursive=False):
         """Copy LDAP object.
         """
-        def _copy(olddn, newdn):
-            ldap_entry = self._ldapconn.search_ext_s(self._encode(olddn),
-                ldap.SCOPE_BASE, timeout=self._resource.timeout)
-            modlist = {}
-            if ldap_entry:
-                if len(ldap_entry) > 1:
-                    raise Exception('Got multiple objects for dn: %s' % olddn)
-                else:
-                    ret = ldap_entry[0][1]
-                    # We fetch all the keys and set the modlist
-                    for key in ret.keys():
-                        modlist[key] = self.get_attr(olddn, key)
-            log.debug("Copy '%s' to '%s' with attrs: %s" % (olddn, newdn,
-                modlist))
-            self.add_object(newdn, modlist)
+        ldap_entry = self._ldapconn.search_ext_s(self._encode(olddn),
+            ldap.SCOPE_BASE, timeout=self._resource.timeout)
+        modlist = {}
+        if ldap_entry:
+            if len(ldap_entry) > 1:
+                raise Exception('Got multiple objects for dn: %s' % olddn)
+            else:
+                ret = ldap_entry[0][1]
+                # We fetch all the keys and set the modlist
+                for key in ret.keys():
+                    modlist[key] = self.get_attr(olddn, key)
+        log.debug("Copy '%s' to '%s' with attrs: %s" % (olddn, newdn, modlist))
+        self.add_object(newdn, modlist)
 
-        _copy(olddn, newdn)
         if recursive:
             for sub in self.search(Model, olddn, recursive=False,
                 skip_basedn=True):
