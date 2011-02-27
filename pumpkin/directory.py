@@ -340,16 +340,7 @@ class Directory(object):
     @ldap_exception_handler
     def rename(self, old_dn, new_rdn, parent=None):
         """Rename or move object.
-        """
-        def _move(obj, newdn):
-            self.copy(obj.dn, newdn)
-            log.debug("Copy '%s' to '%s'" % (obj.dn, newdn))
-            for sub in obj.get_children(model=Model, recursive=False):
-                newsubdn = u'%s,%s' % (sub.dn.split(',')[0], newdn)
-                log.debug("Copy child '%s'" % sub.dn)
-                _move(sub, newsubdn)
-            obj.delete(recursive=True)
-
+        """ 
         obj = Model(self, old_dn)
         if parent:
             newdn = u'%s,%s' % (new_rdn, parent)
@@ -361,14 +352,16 @@ class Directory(object):
             try:
                 self._ldapconn.rename_s(self._encode(old_dn),
                     self._encode(new_rdn), newsuperior=parent)
-            except ldap.UNWILLING_TO_PERFORM, e:
+            except ldap.UNWILLING_TO_PERFORM:
                 log.debug("rename_s failed, re-running complex rename")
-                _move(obj, newdn)
+                self.copy(obj.dn, newdn, recursive=True)
+                obj.delete(recursive=True)
         else:
             # we got children objects, make complex rename
             # first create temporary OU for children
             log.debug("Performing complex rename on %s" % old_dn)
-            _move(obj, newdn)
+            self.copy(obj.dn, newdn, recursive=True)
+            obj.delete(recursive=True)
 
     @ldap_reconnect_handler
     @ldap_exception_handler
@@ -388,24 +381,32 @@ class Directory(object):
             modlist.append((attr, values))
         self._ldapconn.add_s(self._encode(ldap_dn), modlist)
 
-    def copy(self, olddn, newdn):
+    def copy(self, olddn, newdn, recursive=False):
         """Copy LDAP object.
         """
-        ldap_entry = self._ldapconn.search_ext_s(self._encode(olddn),
-            ldap.SCOPE_BASE, timeout=self._resource.timeout)
+        def _copy(olddn, newdn):
+            ldap_entry = self._ldapconn.search_ext_s(self._encode(olddn),
+                ldap.SCOPE_BASE, timeout=self._resource.timeout)
+            modlist = {}
+            if ldap_entry:
+                if len(ldap_entry) > 1:
+                    raise Exception('Got multiple objects for dn: %s' % olddn)
+                else:
+                    ret = ldap_entry[0][1]
+                    # We fetch all the keys and set the modlist
+                    for key in ret.keys():
+                        modlist[key] = self.get_attr(olddn, key)
+            log.debug("Copy '%s' to '%s' with attrs: %s" % (olddn, newdn,
+                modlist))
+            self.add_object(newdn, modlist)
 
-        modlist = {}
-        if ldap_entry != []:
-            if len(ldap_entry) > 1:
-                raise Exception('Got multiple objects for dn: %s' % olddn)
-            else:
-                ret = ldap_entry[0][1]
-                # We fetch all the keys and set the modlist
-                for key in ret.keys():
-                    modlist[key] = self.get_attr(olddn, key)
-        
-        log.debug("Copy '%s' to '%s' with attrs: %s" % (olddn, newdn, modlist))
-        self.add_object(newdn, modlist)
+        _copy(olddn, newdn)
+        if recursive:
+            for sub in self.search(Model, olddn, recursive=False,
+                skip_basedn=True):
+                newsubdn = u'%s,%s' % (sub.dn.split(',')[0], newdn)
+                log.debug("Copy child '%s'" % sub.dn)
+                self.copy(sub.dn, newsubdn, recursive=True)
 
     def _get_oc_inst(self, oc):
         """Get object class instance
