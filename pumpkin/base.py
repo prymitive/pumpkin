@@ -266,8 +266,8 @@ class _Model(object):
     def _validate_schema(self):
         """Checks if all model fields are present in schema
         """
-        # skip checks if we got catch all model type (like models.DN)
-        if self._object_class_ != [] and self._rdn_ != []:
+        # skip checks if we got catch all model type (like models.DN) or the model is using extensibleObject
+        if 'extensibleObject' not in self.private_classes() and self._object_class_ != [] and self._rdn_ != []:
             (must, may) = self.directory.get_schema_attrs(self.__class__)
 
             for (field, instance) in self._get_fields().items():
