@@ -357,6 +357,8 @@ class DatetimeField(Field):
 class DictField(Field):
     """Dictionary field with only unicode values.
     """
+    default = {}
+
     def __init__(self, name, **kwargs):
         """Adds 'separator' kwarg
         """
