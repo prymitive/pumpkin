@@ -7,6 +7,7 @@ Created on 2009-05-24
 '''
 
 
+import time
 import logging
 try:
     # this is python >=2.5 module
@@ -90,7 +91,7 @@ def ldap_reconnect_handler(func):
                 args[0]._connect()
                 return func(*args, **kwargs)
             except:
-                pass
+                time.sleep(1 * cnt)
         else:
             raise exceptions.ReConnectionError("Can't reconnect to LDAP")
 
