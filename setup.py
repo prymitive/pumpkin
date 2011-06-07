@@ -22,7 +22,7 @@ except ImportError:
 
 setup(
     name='pumpkin',
-    version='0.1.8',
+    version='0.1-dev',
     description='Simple library for working with ldap',
     author='Łukasz Mierzwa',
     author_email='l.mierzwa@gmail.com',
