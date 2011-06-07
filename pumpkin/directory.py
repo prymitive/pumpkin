@@ -408,6 +408,8 @@ class Directory(object):
     def _get_oc_inst(self, oc):
         """Get object class instance
         """
+        if self._schema is None:
+            self._schema = schema.SubSchema(schemadict)
         for oids in self._schema.listall(schema.ObjectClass):
             obj = self._schema.get_obj(schema.ObjectClass, oids)
             for name in obj.names:
