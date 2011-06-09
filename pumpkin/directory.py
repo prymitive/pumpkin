@@ -409,7 +409,7 @@ class Directory(object):
         """Get object class instance
         """
         if self._schema is None:
-            self._schema = schema.SubSchema(schemadict)
+            self._read_schema()
         for oids in self._schema.listall(schema.ObjectClass):
             obj = self._schema.get_obj(schema.ObjectClass, oids)
             for name in obj.names:
