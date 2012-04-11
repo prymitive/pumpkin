@@ -371,6 +371,7 @@ object classes: %s, all available attrs: %s""" % (
             # before actual save()
             if self._olddn is None:
                 self._olddn = self.dn
+                self._parent = self.get_parent()
         self._store_attr(attr, value)
 
     def _del_attr(self, attr):
@@ -538,7 +539,7 @@ object classes: %s, all available attrs: %s""" % (
             self._empty = False
         else:
 
-            if self._olddn:
+            if self._olddn and self._olddn != self.dn:
                 log.debug("Rename object from '%s' to '%s'" % (self._olddn, self.dn))
                 self.directory.rename(
                     self._olddn,
